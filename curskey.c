@@ -47,14 +47,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct curskey_key_s {
+struct curskey_key {
 	char *keyname;
 	int keycode;
 };
 
 int KEY_RETURN = '\n';
 unsigned int curskey_keynames_size = 0; 
-struct curskey_key_s *curskey_keynames = NULL;
+struct curskey_key *curskey_keynames = NULL;
 // The starting keycode for enumerating meta/alt key combinations
 unsigned int CURSKEY_META_START = 0;
 // By default, curskey does not introduce new keybindings.
@@ -62,7 +62,7 @@ unsigned int CURSKEY_KEY_MAX = KEY_MAX;
 
 // Names for non-printable/whitespace characters
 // and aliases for existing keys
-static const struct curskey_key_s curskey_aliases[] = {
+static const struct curskey_key curskey_aliases[] = {
 	// Keep this sorted by `keyname`
 	{ "DEL",	KEY_DEL },
 	{ "DELETE",	KEY_DC },
@@ -94,11 +94,11 @@ static const struct curskey_key_s curskey_aliases[] = {
 
 // curskey_find {{{
 static int curskey_key_cmp(const void *a, const void *b) {
-	return strcmp(((struct curskey_key_s*) a)->keyname,
-			((struct curskey_key_s*) b)->keyname);
+	return strcmp(((struct curskey_key*) a)->keyname,
+			((struct curskey_key*) b)->keyname);
 }
 
-static int curskey_find(const struct curskey_key_s *table, unsigned int size, const char *name) {
+static int curskey_find(const struct curskey_key *table, unsigned int size, const char *name) {
 	unsigned int start = 0;
 	unsigned int end = size;
 	unsigned int i;
@@ -207,10 +207,10 @@ static void free_ncurses_keynames() {
  */
 int create_ncurses_keynames() {
 	char	*name;
-	struct curskey_key_s *tmp;
+	struct curskey_key *tmp;
 
 	free_ncurses_keynames();
-	curskey_keynames = malloc((KEY_MAX - KEY_MIN) * sizeof(struct curskey_key_s));
+	curskey_keynames = malloc((KEY_MAX - KEY_MIN) * sizeof(struct curskey_key));
 	if (!curskey_keynames)
 		return ERR;
 
@@ -232,12 +232,12 @@ int create_ncurses_keynames() {
 		++curskey_keynames_size;
 	}
 
-	tmp = realloc(curskey_keynames, curskey_keynames_size * sizeof(struct curskey_key_s));
+	tmp = realloc(curskey_keynames, curskey_keynames_size * sizeof(struct curskey_key));
 	if (!tmp)
 		goto ERROR;
 	curskey_keynames = tmp;
 
-	qsort(curskey_keynames, curskey_keynames_size, sizeof(struct curskey_key_s), curskey_key_cmp);
+	qsort(curskey_keynames, curskey_keynames_size, sizeof(struct curskey_key), curskey_key_cmp);
 
 	return OK;
 ERROR:
@@ -253,9 +253,9 @@ int curskey_define_meta_keys(unsigned int meta_start) {
 #ifdef NCURSES_VERSION
 	CURSKEY_META_START = meta_start;
 
-	int 	ch;
-	int	curs_keycode = CURSKEY_META_START;
-	char 	key_sequence[3] = "\e ";
+	int ch;
+	int curs_keycode = CURSKEY_META_START;
+	char key_sequence[3] = "\e ";
 
 	for (ch = 0; ch <= CURSKEY_META_END_CHARACTERS; ++ch) {
 		key_sequence[1] = ch;
@@ -264,9 +264,9 @@ int curskey_define_meta_keys(unsigned int meta_start) {
 	}
 
 	CURSKEY_KEY_MAX = CURSKEY_META_START + CURSKEY_META_END_CHARACTERS;
-  return ERR;
+	return 0;
 #endif
-  return 0;
+	return ERR;
 }
 
 /* Return the keycode for a key with modifiers applied.
