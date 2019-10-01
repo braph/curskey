@@ -281,12 +281,8 @@ int curskey_define_meta_keys(unsigned int meta_start) {
  */
 int curskey_mod_key(int key, unsigned int modifiers) {
 	if (modifiers & CURSKEY_MOD_CNTRL) {
-		/**/ if (key >= 'A' && key <= '_')
-			key -= 'A' - 1;
-		else if (key >= 'a' && key <= 'z')
-			key -= 'a' - 1;
-		else if (key == ' ')
-			key = 0;
+		if ((key >= 'A' && key <= '_') || (key >= 'a' && key <= 'z') || key == ' ')
+			key = key % 32;
 		else
 			return ERR;
 	}

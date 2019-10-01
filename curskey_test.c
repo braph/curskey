@@ -369,15 +369,15 @@ int main(int argc, char *argv[])
 	for (int TRUE_FALSE = 0; TRUE_FALSE <= 1; ++TRUE_FALSE) {
 		initscr();
 		curskey_init();
-    if (TRUE_FALSE)
-      curskey_define_meta_keys(128);
+		if (TRUE_FALSE)
+			curskey_define_meta_keys(128);
 		meta(stdscr, TRUE_FALSE);
 		endwin();
 		if (opt_dump)
 			print_keys();
 		do_tests();
 		printf("\tcurskey has been tested with `meta(stdscr, %s)`\n\n",
-			(TRUE_FALSE ? "ON" : "OFF"));
+				(TRUE_FALSE ? "ON" : "OFF"));
 		curskey_destroy();
 	}
 
@@ -396,8 +396,8 @@ int main(int argc, char *argv[])
 			const char *keydef = curskey_get_keydef(ch);
 			const char *nc_keyname = keyname(ch);
 			sprintf(buf, "%d curskey: %s ncurses: %s\n", ch,
-				(keydef ? keydef : "???"),
-				(nc_keyname ? nc_keyname : "???"));
+					(keydef ? keydef : "???"),
+					(nc_keyname ? nc_keyname : "???"));
 
 			addstr(buf);
 
