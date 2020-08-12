@@ -6,13 +6,10 @@
 #include <string.h>
 #include "curskey.h"
 
-int count = 0; // Test count
-int having_int = 0; // Test result, int
-const char* having_str = NULL; // Test result, str
-char* test_info = NULL; // Additional info string
-
-#define MOD_META CURSKEY_MOD_META
-#define MOD_CNTRL CURSKEY_MOD_CNTRL
+int count = 0;					// Test count
+int having_int; 				// Test result, int
+const char* having_str;			// Test result, str
+const char* test_info = NULL;	// Additional info string
 
 #define print_test(FMT, ARGS...) do { \
 	if (test_info) \
@@ -54,19 +51,24 @@ char* test_info = NULL; // Additional info string
 } while(0)
 
 static int streq(const char *a, const char *b) {
-	return ((!a || !b) ? a == b : !strcmp(a,b));
+	return ((!a || !b) ? a == b : !strcmp(a, b));
 }
+
+#define MOD_META	CURSKEY_MOD_META
+#define MOD_CNTRL	CURSKEY_MOD_CNTRL
 
 void do_tests() {
 	char buf[128];
 
-	// curskey_normalize ==================================================
+	// ========================================================================
+	// curskey_normalize() ====================================================
+	// ========================================================================
 #if 0
 #define test test_str
-	test (NULL, curskey_normalize(NULL));
-	test ("F1", curskey_normalize("KEY_F1"));
-	test ("F1", curskey_normalize("KEY_F(1)"));
-	test ("f12", curskey_normalize("KEY_f(12)"));
+	test (NULL,   curskey_normalize(NULL));
+	test ("F1",   curskey_normalize("KEY_F1"));
+	test ("F1",   curskey_normalize("KEY_F(1)"));
+	test ("f12",  curskey_normalize("KEY_f(12)"));
 	test ("HOME", curskey_normalize("HOME"));
 	test ("HOME", curskey_normalize("KEY_HOME"));
 #undef test
@@ -74,91 +76,104 @@ void do_tests() {
 
 #define test test_int
 
-	// curskey_keycode ====================================================
-	test (ERR, curskey_keycode(NULL));
-	test (127, curskey_keycode("DEL"));
-	test (' ', curskey_keycode("SPACE"));
-	test ('\t', curskey_keycode("TAB"));
-	test ('\n', curskey_keycode("RETURN"));
-	test (KEY_HOME, curskey_keycode("HOME"));
-	test (KEY_ESCAPE, curskey_keycode("ESCAPE"));
-	test (KEY_PAGEUP, curskey_keycode("PAGEUP"));
-	test (KEY_PAGEDOWN, curskey_keycode("PAGEDOWN"));
-	test (KEY_INSERT, curskey_keycode("INSERT"));
-	test (KEY_DELETE, curskey_keycode("DELETE"));
-	test (KEY_UP, curskey_keycode("UP"));
-	test (KEY_DOWN, curskey_keycode("DOWN"));
-	test (KEY_LEFT, curskey_keycode("LEFT"));
-	test (KEY_RIGHT, curskey_keycode("RIGHT"));
-	test (KEY_F(1), curskey_keycode("F1"));
-	test (KEY_F(12), curskey_keycode("F12"));
-	test (KEY_F(63), curskey_keycode("F63"));
+	// ========================================================================
+	// curskey_keycode() ======================================================
+	// ========================================================================
+
+	test (127,           curskey_keycode("DEL"));    // aliased
+	test (' ',           curskey_keycode("SPACE"));  // aliased
+	test ('\t',          curskey_keycode("TAB"));    // aliased
+	test ('\n',          curskey_keycode("RETURN")); // aliased
+	test (KEY_ESCAPE,    curskey_keycode("ESCAPE")); // aliased
+	test (KEY_HOME,      curskey_keycode("HOME"));
+	test (KEY_PAGEUP,    curskey_keycode("PAGEUP"));
+	test (KEY_PAGEDOWN,  curskey_keycode("PAGEDOWN"));
+	test (KEY_INSERT,    curskey_keycode("INSERT"));
+	test (KEY_DELETE,    curskey_keycode("DELETE"));
+	test (KEY_UP,        curskey_keycode("UP"));
+	test (KEY_DOWN,      curskey_keycode("DOWN"));
+	test (KEY_LEFT,      curskey_keycode("LEFT"));
+	test (KEY_RIGHT,     curskey_keycode("RIGHT"));
+	test (KEY_F(1),      curskey_keycode("F1"));
+	test (KEY_F(12),     curskey_keycode("F12"));
+	test (KEY_F(63),     curskey_keycode("F63"));
 
 	// different function key format
-	test (KEY_F(1), curskey_keycode("KEY_F1"));
-	test (KEY_F(1), curskey_keycode("KEY_F(1)"));
-	test (KEY_F(1), curskey_keycode("key_f(1)"));
-	test (KEY_F(1), curskey_keycode("F(1)"));
-	test (KEY_F(1), curskey_keycode("f(1)"));
+	test (KEY_F(1),      curskey_keycode("KEY_F1"));
+	test (KEY_F(1),      curskey_keycode("KEY_F(1)"));
+	test (KEY_F(1),      curskey_keycode("key_f(1)"));
+	test (KEY_F(1),      curskey_keycode("F(1)"));
+	test (KEY_F(1),      curskey_keycode("f(1)"));
 
 	// different case
-	test (KEY_HOME, curskey_keycode("KEY_HOME"));
-	test (KEY_HOME, curskey_keycode("KeY_HOME"));
-	test (KEY_HOME, curskey_keycode("key_home"));
-	test (KEY_HOME, curskey_keycode("home"));
+	test (KEY_HOME,      curskey_keycode("KEY_HOME"));
+	test (KEY_HOME,      curskey_keycode("KeY_HOME"));
+	test (KEY_HOME,      curskey_keycode("key_home"));
+	test (KEY_HOME,      curskey_keycode("home"));
 
 	// invalid keys
-	test (ERR, curskey_keycode(""));
-	test (ERR, curskey_keycode("a"));
-	test (ERR, curskey_keycode("foo"));
-	test (ERR, curskey_keycode("F64"));
+	//test (ERR,           curskey_keycode(NULL));
+	test (ERR,           curskey_keycode(""));
+	test (ERR,           curskey_keycode("a"));
+	test (ERR,           curskey_keycode("foo"));
+	test (ERR,           curskey_keycode("F64"));
 
+	// ========================================================================
+	// curskey_cntrl_key() ====================================================
+	// ========================================================================
 
-	// curskey_cntrl_key ==================================================
-	test (ERR, curskey_cntrl_key(-1));
-	test (ERR, curskey_cntrl_key(0));
-	test (ERR, curskey_cntrl_key(33));
-	test (ERR, curskey_cntrl_key(128));
-	test (0, curskey_cntrl_key(KEY_SPACE));
-	test (ERR, curskey_cntrl_key(KEY_TAB));
-	test (ERR, curskey_cntrl_key(KEY_RETURN));
-	test (ERR, curskey_cntrl_key(KEY_DEL));
-	test (ERR, curskey_cntrl_key(KEY_ESCAPE));
+	test (0,             curskey_cntrl_key(KEY_SPACE));
+	test (1,             curskey_cntrl_key('a'));
+	test (1,             curskey_cntrl_key('A'));
+	test (ERR,           curskey_cntrl_key(-1));
+	test (ERR,           curskey_cntrl_key(0));
+	test (ERR,           curskey_cntrl_key(33));
+	test (ERR,           curskey_cntrl_key(128));
+	test (ERR,           curskey_cntrl_key(KEY_TAB));
+	test (ERR,           curskey_cntrl_key(KEY_RETURN));
+	test (ERR,           curskey_cntrl_key(KEY_DEL));
+	test (ERR,           curskey_cntrl_key(KEY_ESCAPE));
 
-
-	// curskey_meta_key ===================================================
+	// ========================================================================
+	// curskey_meta_key() =====================================================
+	// ========================================================================
 if (CURSKEY_CAN_META) {
-	test (ERR, curskey_meta_key(-1));
-	test (ERR, curskey_meta_key(128));
-	test_no_err (curskey_meta_key('a'));
-	test_no_err (curskey_meta_key(KEY_SPACE));
-	test_no_err (curskey_meta_key(KEY_TAB));
-	test_no_err (curskey_meta_key(KEY_RETURN));
-	test_no_err (curskey_meta_key(KEY_DEL));
-	test_no_err (curskey_meta_key(KEY_ESCAPE));
+	test (ERR,          curskey_meta_key(-1));
+	test (ERR,          curskey_meta_key(128));
+	test_no_err (       curskey_meta_key('a'));
+	test_no_err (       curskey_meta_key(KEY_SPACE));
+	test_no_err (       curskey_meta_key(KEY_TAB));
+	test_no_err (       curskey_meta_key(KEY_RETURN));
+	test_no_err (       curskey_meta_key(KEY_DEL));
+	test_no_err (       curskey_meta_key(KEY_ESCAPE));
 } else {
 	test (ERR, curskey_meta_key('a'));
 }
 
-	// curskey_mod_key - control + meta ===================================
+	// ========================================================================
+	// curskey_mod_key() - control + meta =====================================
+	// ========================================================================
 if (CURSKEY_CAN_META) {
 	test_no_err (curskey_mod_key('a', MOD_META|MOD_CNTRL));
-	test (ERR, curskey_mod_key(-1, MOD_META|MOD_CNTRL));
-	test (ERR, curskey_mod_key(0, MOD_META|MOD_CNTRL));
-	test (ERR, curskey_mod_key(33, MOD_META|MOD_CNTRL));
-	test (ERR, curskey_mod_key(128, MOD_META|MOD_CNTRL));
+	test (ERR, curskey_mod_key(-1,          MOD_META|MOD_CNTRL));
+	test (ERR, curskey_mod_key(0,           MOD_META|MOD_CNTRL));
+	test (ERR, curskey_mod_key(33,          MOD_META|MOD_CNTRL));
+	test (ERR, curskey_mod_key(128,         MOD_META|MOD_CNTRL));
 	test_no_err (curskey_mod_key(KEY_SPACE, MOD_META|MOD_CNTRL));
-	test (ERR, curskey_mod_key(KEY_TAB, MOD_META|MOD_CNTRL));
-	test (ERR, curskey_mod_key(KEY_RETURN, MOD_META|MOD_CNTRL));
-	test (ERR, curskey_mod_key(KEY_DEL, MOD_META|MOD_CNTRL));
-	test (ERR, curskey_mod_key(KEY_ESCAPE, MOD_META|MOD_CNTRL));
+	test (ERR, curskey_mod_key(KEY_TAB,     MOD_META|MOD_CNTRL));
+	test (ERR, curskey_mod_key(KEY_RETURN,  MOD_META|MOD_CNTRL));
+	test (ERR, curskey_mod_key(KEY_DEL,     MOD_META|MOD_CNTRL));
+	test (ERR, curskey_mod_key(KEY_ESCAPE,  MOD_META|MOD_CNTRL));
 } else {
 	test (ERR, curskey_mod_key('a', MOD_META|MOD_CNTRL));
 }
 
-	// curskey_parse ======================================================
+	// ========================================================================
+	// curskey_parse() ========================================================
+	// ========================================================================
+
 	// invalid
-	test (ERR, curskey_parse(NULL));
+	//test (ERR, curskey_parse(NULL));
 	test (ERR, curskey_parse(""));
 
 	// simple character
@@ -215,11 +230,12 @@ if (CURSKEY_CAN_META) {
 	test (curskey_meta_key('A'),  curskey_parse("m-A"));
 
 	// meta special ("fake" special, since these are single characters)
-	test (curskey_meta_key(KEY_SPACE), curskey_parse("M-SPACE"));
-	test (curskey_meta_key(KEY_TAB), curskey_parse("M-TAB"));
+	test (curskey_meta_key(KEY_SPACE),  curskey_parse("M-SPACE"));
+	test (curskey_meta_key(KEY_TAB),    curskey_parse("M-TAB"));
 	test (curskey_meta_key(KEY_RETURN), curskey_parse("M-RETURN"));
-	test (curskey_meta_key(KEY_DEL), curskey_parse("M-DEL"));
+	test (curskey_meta_key(KEY_DEL),    curskey_parse("M-DEL"));
 	test (curskey_meta_key(KEY_ESCAPE), curskey_parse("M-ESCAPE"));
+
 	// invalid keys (symbolic with meta is not supported)
 	test (ERR, curskey_parse("M-INSERT"));
 	test (ERR, curskey_parse("M-LEFT"));
@@ -227,105 +243,107 @@ if (CURSKEY_CAN_META) {
 
 	// meta + control
 	test (curskey_mod_key(KEY_SPACE, MOD_META|MOD_CNTRL), curskey_parse("C-M-SPACE"));
-	test (ERR, curskey_parse("C-M-TAB"));
-	test (ERR, curskey_parse("C-M-RETURN"));
-	test (ERR, curskey_parse("C-M-DEL"));
-	test (ERR, curskey_parse("C-M-ESCAPE"));
-	
+	test (ERR,          curskey_parse("C-M-TAB"));
+	test (ERR,          curskey_parse("C-M-RETURN"));
+	test (ERR,          curskey_parse("C-M-DEL"));
+	test (ERR,          curskey_parse("C-M-ESCAPE"));
 
 	// ncurses keys
-	test (' ',	curskey_parse("SPACE"));
-	test ('\t',	curskey_parse("TAB"));
-	test ('\n',	curskey_parse("RETURN"));
+	test (' ',	        curskey_parse("SPACE"));
+	test ('\t',	        curskey_parse("TAB"));
+	test ('\n',	        curskey_parse("RETURN"));
 	test (KEY_ESCAPE,	curskey_parse("ESCAPE"));
-	test (KEY_DEL,	curskey_parse("DEL"));
-	test (KEY_UP,	curskey_parse("UP"));
-	test (KEY_DOWN,	curskey_parse("DOWN"));
-	test (KEY_LEFT,	curskey_parse("LEFT"));
+	test (KEY_DEL,	    curskey_parse("DEL"));
+	test (KEY_UP,	    curskey_parse("UP"));
+	test (KEY_DOWN,	    curskey_parse("DOWN"));
+	test (KEY_LEFT,	    curskey_parse("LEFT"));
 	test (KEY_RIGHT,	curskey_parse("RIGHT"));
 	test (KEY_PPAGE,	curskey_parse("PAGEUP"));
 	test (KEY_NPAGE,	curskey_parse("PAGEDOWN"));
-	test (KEY_END,	curskey_parse("END"));
-	test (KEY_HOME,	curskey_parse("HOME"));
-	test (KEY_DC,	curskey_parse("DELETE"));
-	test (KEY_IC,	curskey_parse("INSERT"));
-	test (KEY_F(1),  curskey_parse("F1"));
-	test (KEY_F(63),  curskey_parse("F63"));
-	test (ERR, curskey_parse("F64"));
+	test (KEY_END,	    curskey_parse("END"));
+	test (KEY_HOME,	    curskey_parse("HOME"));
+	test (KEY_DC,	    curskey_parse("DELETE"));
+	test (KEY_IC,	    curskey_parse("INSERT"));
+	test (KEY_F(1),     curskey_parse("F1"));
+	test (KEY_F(63),    curskey_parse("F63"));
+	test (ERR,          curskey_parse("F64"));
 
 #undef test
 #define test test_str
 	// curskey_keyname
-	test("SPACE", curskey_keyname(' '));
-	test("TAB", curskey_keyname('\t'));
-	test("DEL", curskey_keyname(127));
-	test("ESCAPE", curskey_keyname(27));
+	test("SPACE",       curskey_keyname(' '));
+	test("TAB",         curskey_keyname('\t'));
+	test("DEL",         curskey_keyname(127));
+	test("ESCAPE",      curskey_keyname(27));
 
-	// curskey_get_keydef =================================================
+	// ========================================================================
+	// curskey_get_keydef() ===================================================
+	// ========================================================================
+
 	// single characters
-	test("a", curskey_get_keydef('a'));
-	test("A", curskey_get_keydef('A'));
+	test("a",           curskey_get_keydef('a'));
+	test("A",           curskey_get_keydef('A'));
 
 	// ncurses keynames
-	test("HOME", curskey_get_keydef(KEY_HOME));
-	test("F1", curskey_get_keydef(KEY_F(1)));
-	test("F10", curskey_get_keydef(KEY_F(10)));
-	test("F33", curskey_get_keydef(KEY_F(33)));
-	test("F63", curskey_get_keydef(KEY_F(63)));
+	test("HOME",        curskey_get_keydef(KEY_HOME));
+	test("F1",          curskey_get_keydef(KEY_F(1)));
+	test("F10",         curskey_get_keydef(KEY_F(10)));
+	test("F33",         curskey_get_keydef(KEY_F(33)));
+	test("F63",         curskey_get_keydef(KEY_F(63)));
 
 	// control characters
-	test("C-A", curskey_get_keydef(1));
-	test("C-Z", curskey_get_keydef(26));
-	test("ESCAPE", curskey_get_keydef(27)); // special case
-	test("C-\\", curskey_get_keydef(28));
-	test("C-]", curskey_get_keydef(29));
-	test("C-^", curskey_get_keydef(30));
-	test("C-_", curskey_get_keydef(31));
+	test("C-A",         curskey_get_keydef(1));
+	test("C-Z",         curskey_get_keydef(26));
+	test("ESCAPE",      curskey_get_keydef(27)); // special case
+	test("C-\\",        curskey_get_keydef(28));
+	test("C-]",         curskey_get_keydef(29));
+	test("C-^",         curskey_get_keydef(30));
+	test("C-_",         curskey_get_keydef(31));
 
 	// meta characters
 if (CURSKEY_CAN_META) {
-	test("M-a", curskey_get_keydef(curskey_meta_key('a')));
-	test("M-A", curskey_get_keydef(curskey_meta_key('A')));
-	test("M-z", curskey_get_keydef(curskey_meta_key('z')));
-	test("M-Z", curskey_get_keydef(curskey_meta_key('Z')));
-	test("M-\\", curskey_get_keydef(curskey_meta_key('\\')));
-	test("M-]", curskey_get_keydef(curskey_meta_key(']')));
-	test("M-^", curskey_get_keydef(curskey_meta_key('^')));
-	test("M-_", curskey_get_keydef(curskey_meta_key('_')));
+	test("M-a",         curskey_get_keydef(curskey_meta_key('a')));
+	test("M-A",         curskey_get_keydef(curskey_meta_key('A')));
+	test("M-z",         curskey_get_keydef(curskey_meta_key('z')));
+	test("M-Z",         curskey_get_keydef(curskey_meta_key('Z')));
+	test("M-\\",        curskey_get_keydef(curskey_meta_key('\\')));
+	test("M-]",         curskey_get_keydef(curskey_meta_key(']')));
+	test("M-^",         curskey_get_keydef(curskey_meta_key('^')));
+	test("M-_",         curskey_get_keydef(curskey_meta_key('_')));
 
 	// meta + control characters
-	test("C-M-A", curskey_get_keydef(curskey_mod_key('a', MOD_CNTRL|MOD_META)));
-	test("C-M-A", curskey_get_keydef(curskey_mod_key('A', MOD_CNTRL|MOD_META)));
-	test("C-M-Z", curskey_get_keydef(curskey_mod_key('z', MOD_CNTRL|MOD_META)));
-	test("C-M-Z", curskey_get_keydef(curskey_mod_key('Z', MOD_CNTRL|MOD_META)));
-	test("C-M-\\", curskey_get_keydef(curskey_mod_key('\\', MOD_CNTRL|MOD_META)));
-	test("C-M-]", curskey_get_keydef(curskey_mod_key(']', MOD_CNTRL|MOD_META)));
-	test("C-M-^", curskey_get_keydef(curskey_mod_key('^', MOD_CNTRL|MOD_META)));
-	test("C-M-_", curskey_get_keydef(curskey_mod_key('_', MOD_CNTRL|MOD_META)));
+	test("C-M-A",       curskey_get_keydef(curskey_mod_key('a', MOD_CNTRL|MOD_META)));
+	test("C-M-A",       curskey_get_keydef(curskey_mod_key('A', MOD_CNTRL|MOD_META)));
+	test("C-M-Z",       curskey_get_keydef(curskey_mod_key('z', MOD_CNTRL|MOD_META)));
+	test("C-M-Z",       curskey_get_keydef(curskey_mod_key('Z', MOD_CNTRL|MOD_META)));
+	test("C-M-\\",      curskey_get_keydef(curskey_mod_key('\\',MOD_CNTRL|MOD_META)));
+	test("C-M-]",       curskey_get_keydef(curskey_mod_key(']', MOD_CNTRL|MOD_META)));
+	test("C-M-^",       curskey_get_keydef(curskey_mod_key('^', MOD_CNTRL|MOD_META)));
+	test("C-M-_",       curskey_get_keydef(curskey_mod_key('_', MOD_CNTRL|MOD_META)));
 }
 
 	// special keynames
-	test("SPACE", curskey_get_keydef(KEY_SPACE));
-	test("DEL", curskey_get_keydef(KEY_DEL));
-	test("TAB", curskey_get_keydef(KEY_TAB));
-	test("RETURN", curskey_get_keydef(KEY_RETURN));
-	test("ESCAPE", curskey_get_keydef(KEY_ESCAPE));
+	test("SPACE",       curskey_get_keydef(KEY_SPACE));
+	test("DEL",         curskey_get_keydef(KEY_DEL));
+	test("TAB",         curskey_get_keydef(KEY_TAB));
+	test("RETURN",      curskey_get_keydef(KEY_RETURN));
+	test("ESCAPE",      curskey_get_keydef(KEY_ESCAPE));
 
 if (CURSKEY_CAN_META) {
-	test("M-SPACE", curskey_get_keydef(curskey_meta_key(KEY_SPACE)));
-	test("M-DEL", curskey_get_keydef(curskey_meta_key(KEY_DEL)));
-	test("M-TAB", curskey_get_keydef(curskey_meta_key(KEY_TAB)));
-	test("M-RETURN", curskey_get_keydef(curskey_meta_key(KEY_RETURN)));
-	test("M-ESCAPE", curskey_get_keydef(curskey_meta_key(KEY_ESCAPE)));
+	test("M-SPACE",     curskey_get_keydef(curskey_meta_key(KEY_SPACE)));
+	test("M-DEL",       curskey_get_keydef(curskey_meta_key(KEY_DEL)));
+	test("M-TAB",       curskey_get_keydef(curskey_meta_key(KEY_TAB)));
+	test("M-RETURN",    curskey_get_keydef(curskey_meta_key(KEY_RETURN)));
+	test("M-ESCAPE",    curskey_get_keydef(curskey_meta_key(KEY_ESCAPE)));
 }
 
-	test("C-SPACE", curskey_get_keydef(curskey_cntrl_key(KEY_SPACE)));
-	test(NULL,	curskey_get_keydef(curskey_cntrl_key(KEY_DEL)));
-	test(NULL, curskey_get_keydef(curskey_cntrl_key(KEY_TAB)));
-	test(NULL, curskey_get_keydef(curskey_cntrl_key(KEY_RETURN)));
-	test(NULL, curskey_get_keydef(curskey_cntrl_key(KEY_ESCAPE)));
+	test("C-SPACE",     curskey_get_keydef(curskey_cntrl_key(KEY_SPACE)));
+	test(NULL,	        curskey_get_keydef(curskey_cntrl_key(KEY_DEL)));
+	test(NULL,          curskey_get_keydef(curskey_cntrl_key(KEY_TAB)));
+	test(NULL,          curskey_get_keydef(curskey_cntrl_key(KEY_RETURN)));
+	test(NULL,          curskey_get_keydef(curskey_cntrl_key(KEY_ESCAPE)));
 
-	test(NULL, curskey_get_keydef(KEY_MAX * 2));
+	test(NULL,          curskey_get_keydef(KEY_MAX * 2));
 	
 	printf("\n\tcurskey was %s to use meta keys.\n",
 		(CURSKEY_CAN_META ? "ABLE" : "UNABLE"));
@@ -338,9 +356,9 @@ void print_keys() {
 	for (i = 0; i < CURSKEY_KEY_MAX; ++i)
 	{
 		if ((keydef = curskey_get_keydef(i))) {
-			printf("%d = %s = %s\t", i, keydef, keyname(i));
+			printf("%03d = %-10s = %-10s\t", i, keydef, keyname(i));
 
-			if (++printed % 4 == 0)
+			//if (++printed % 3 == 0)
 				printf("\n");
 		}
 	}
@@ -413,3 +431,5 @@ int main(int argc, char *argv[])
 	curskey_destroy();
 	return 0;
 }
+
+/* vim: set ts=4 sw=4 : */

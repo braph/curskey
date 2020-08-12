@@ -1,51 +1,35 @@
 /*
  * curskey.c - parse keybindings in ncurses based applications
  * Copyright (C) 2017 Benjamin Abendroth
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
- * Small library for handling/parsing keybindings in ncurses based
- * terminal applications.
- *
- * It allows you to
- *	 - Parse key definitions into ncurses keycodes returned by getch()
- *	 - Get the string representation of a ncurses keycode
- *
- * Following keys are supported:
- *	 - Ncurses special keys (HOME, END, LEFT, F1, ...)
- *	 - Bindings with control-key (C-x, ^x)
- *	 - Bindings with meta/alt-key (M-x, A-x)
- *
- * Usage:
- *   initscr(); // Has to be called!
- *   if (curskey_init() == OK) {
- *   	...
- *   	curskey_destroy();
- *  }
- *
- *  NOTES:
- *  	The variable `int KEY_RETURN` holds the character that should be
- *  	interpreted as RETURN. Depending on whether nl() or nonl() was called
- *  	this may be either '\n' or '\r'.
- *  	It defaults to '\n'.
  */
 
 #include "curskey.h"
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+
+#ifdef __cplusplus
+#define _const_cast(TYPE, VALUE) const_cast<TYPE>(VALUE)
+#define _reinterpret_cast(TYPE, VALUE) reinterpret_cast<TYPE>(VALUE)
+#define _malloc(TYPE, SIZE) _reinterpret_cast(
+#else
+#define _const_cast(TYPE, VALUE) (TYPE)(VALUE)
+#define _reinterpret_cast(TYPE, VALUE) (TYPE)(VALUE)
+#define _malloc(TYPE, SIZE) malloc(SIZE)
+#endif
 
 struct curskey_key {
 	char *keyname;
@@ -53,55 +37,53 @@ struct curskey_key {
 };
 
 int KEY_RETURN = '\n';
-unsigned int curskey_keynames_size = 0; 
-struct curskey_key *curskey_keynames = NULL;
-// The starting keycode for enumerating meta/alt key combinations
-unsigned int CURSKEY_META_START = 0;
-// By default, curskey does not introduce new keybindings.
-unsigned int CURSKEY_KEY_MAX = KEY_MAX;
+int CURSKEY_META_START = 0;
+int CURSKEY_KEY_MAX = KEY_MAX;
+static int curskey_keynames_size = 0;
+static struct curskey_key *curskey_keynames = NULL;
 
 // Names for non-printable/whitespace characters
 // and aliases for existing keys
 static const struct curskey_key curskey_aliases[] = {
 	// Keep this sorted by `keyname`
-	{ "DEL",	KEY_DEL },
-	{ "DELETE",	KEY_DC },
-	{ "ESCAPE",	KEY_ESCAPE },
-	{ "INSERT",	KEY_IC },
-	{ "PAGEDOWN", 	KEY_NPAGE },
-	{ "PAGEUP",	KEY_PPAGE },
-	{ "SPACE",	KEY_SPACE },
-	{ "TAB",	KEY_TAB }
+	{ _const_cast(char*, "DEL"),      KEY_DEL    },
+	{ _const_cast(char*, "DELETE"),   KEY_DC     },
+	{ _const_cast(char*, "ESCAPE"),   KEY_ESCAPE },
+	{ _const_cast(char*, "INSERT"),   KEY_IC     },
+	{ _const_cast(char*, "PAGEDOWN"), KEY_NPAGE  },
+	{ _const_cast(char*, "PAGEUP"),   KEY_PPAGE  },
+	{ _const_cast(char*, "SPACE"),    KEY_SPACE  },
+	{ _const_cast(char*, "TAB"),      KEY_TAB    }
 };
-#define ALIASES_SIZE (sizeof(curskey_aliases)/sizeof(curskey_aliases[0]))
+#define ALIASES_SIZE ((int) (sizeof(curskey_aliases) / sizeof(curskey_aliases[0])))
 
-// MACROS {{{
-#define STARTSWITH_KEY(S) \
-	((name[0] == 'K' || name[0] == 'k') && \
+// Buffer that is used by the functions
+static char buffer[256];
+
+#define STARTSWITH_KEY(S) ( \
+	(name[0] == 'K' || name[0] == 'k') && \
 	(name[1] == 'E' || name[1] == 'e') && \
 	(name[2] == 'Y' || name[2] == 'y') && \
 	(name[3] == '_'))
 
-#define IS_CONTROL(S) \
-	((S[0] == '^') || ((S[0] == 'C' || S[0] == 'c') && S[1] == '-'))
+#define IS_CONTROL(S) ( \
+	((S[0] == '^') && S[1] != '\0') || ((S[0] == 'C' || S[0] == 'c') && S[1] == '-'))
 
-#define IS_META(S) \
-	((S[0] == 'M' || S[0] == 'm' || S[0] == 'A' || S[0] == 'a') && S[1] == '-')
+#define IS_META(S) ( \
+	(S[0] == 'M' || S[0] == 'm' || S[0] == 'A' || S[0] == 'a') && S[1] == '-')
 
-#define IS_SHIFT(S) \
-	((S[0] == 'S' || S[0] == 's') && S[1] == '-')
-// }}} MACROS
+#define IS_SHIFT(S) ( \
+	(S[0] == 'S' || S[0] == 's') && S[1] == '-')
 
-// curskey_find {{{
 static int curskey_key_cmp(const void *a, const void *b) {
 	return strcmp(((struct curskey_key*) a)->keyname,
 			((struct curskey_key*) b)->keyname);
 }
 
-static int curskey_find(const struct curskey_key *table, unsigned int size, const char *name) {
-	unsigned int start = 0;
-	unsigned int end = size;
-	unsigned int i;
+static int curskey_find(const struct curskey_key *table, int size, const char *name) {
+	int start = 0;
+	int end = size;
+	int i;
 	int cmp;
 
 	while (1) {
@@ -118,30 +100,22 @@ static int curskey_find(const struct curskey_key *table, unsigned int size, cons
 			end = i;
 	}
 }
-// }}}
 
-/* Like ncurses keyname(), translates the value of a KEY_ constant to its name,
- * but strips leading "KEY_" and parentheses ("KEY_F(...)") off.
- *
- * Returns NULL on failure.
- *
- * This function is not thread-safe.
- */
 const char* curskey_keyname(int keycode) {
 	int i;
-	static char buf[4] = "Fxx";
 
 	if (keycode >= KEY_F(1) && keycode <= KEY_F(63)) {
 		i = keycode - KEY_F(0);
+		buffer[0] = 'F';
 		if (i <= 9) {
-			buf[1] = '0' + i;
-			buf[2] = '\0';
+			buffer[1] = '0' + i;
+			buffer[2] = '\0';
 		} else {
-			buf[1] = '0' + (int) (i/10);
-			buf[2] = '0' + (i % 10);
-			buf[3] = '\0';
+			buffer[1] = '0' + (i / 10);
+			buffer[2] = '0' + (i % 10);
+			buffer[3] = '\0';
 		}
-		return buf;
+		return buffer;
 	}
 
 	if (keycode == KEY_RETURN)
@@ -158,11 +132,6 @@ const char* curskey_keyname(int keycode) {
 	return NULL;
 }
 
-/* Translate the name of a ncurses KEY_ constant to its value.
- * 	"KEY_DOWN" -> 258
- *
- * Return ERR on failure.
- */
 int curskey_keycode(const char *name)
 {
 	int i;
@@ -202,7 +171,8 @@ static void free_ncurses_keynames() {
 	}
 }
 
-/* Create the list of ncurses KEY_ constants.
+/**
+ * Create the list of ncurses KEY_ constants.
  * Returns OK on success, ERR on failure.
  */
 int create_ncurses_keynames() {
@@ -210,7 +180,7 @@ int create_ncurses_keynames() {
 	struct curskey_key *tmp;
 
 	free_ncurses_keynames();
-	curskey_keynames = malloc((KEY_MAX - KEY_MIN) * sizeof(struct curskey_key));
+	curskey_keynames = (struct curskey_key*) malloc((KEY_MAX - KEY_MIN) * sizeof(struct curskey_key));
 	if (!curskey_keynames)
 		return ERR;
 
@@ -222,17 +192,18 @@ int create_ncurses_keynames() {
 
 		name += 4;
 		if (name[0] == 'F' && name[1] == '(')
-			continue; // ignore KEY_F(1),...
+			continue; // ignore KEY_F(1), ...
 
 		name = strdup(name);
 		if (! name)
 			goto ERROR;
+
 		curskey_keynames[curskey_keynames_size].keycode = key;
 		curskey_keynames[curskey_keynames_size].keyname = name;
 		++curskey_keynames_size;
 	}
 
-	tmp = realloc(curskey_keynames, curskey_keynames_size * sizeof(struct curskey_key));
+	tmp = (struct curskey_key*) realloc(curskey_keynames, curskey_keynames_size * sizeof(struct curskey_key));
 	if (!tmp)
 		goto ERROR;
 	curskey_keynames = tmp;
@@ -240,16 +211,13 @@ int create_ncurses_keynames() {
 	qsort(curskey_keynames, curskey_keynames_size, sizeof(struct curskey_key), curskey_key_cmp);
 
 	return OK;
+
 ERROR:
 	free_ncurses_keynames();
 	return ERR;
 }
 
-/* Defines meta escape sequences in ncurses.
- *
- * Returns 0 if meta keys are available, ERR otherwise.
- */
-int curskey_define_meta_keys(unsigned int meta_start) {
+int curskey_define_meta_keys(int meta_start) {
 #ifdef NCURSES_VERSION
 	CURSKEY_META_START = meta_start;
 
@@ -264,21 +232,11 @@ int curskey_define_meta_keys(unsigned int meta_start) {
 	}
 
 	CURSKEY_KEY_MAX = CURSKEY_META_START + CURSKEY_META_END_CHARACTERS;
-	return 0;
+	return OK;
 #endif
 	return ERR;
 }
 
-/* Return the keycode for a key with modifiers applied.
- *
- * Available modifiers are:
- * 	- CURSKEY_MOD_META / CURSKEY_MOD_ALT
- * 	- CURSKEY_MOD_CNTRL
- *
- * See also the macros curskey_meta_key(), curskey_cntrl_key().
- *
- * Returns ERR if the modifiers cannot be applied to this key.
- */
 int curskey_mod_key(int key, unsigned int modifiers) {
 	if (modifiers & CURSKEY_MOD_CNTRL) {
 		if ((key >= 'A' && key <= '_') || (key >= 'a' && key <= 'z') || key == ' ')
@@ -288,8 +246,7 @@ int curskey_mod_key(int key, unsigned int modifiers) {
 	}
 
 	if (modifiers & CURSKEY_MOD_META) {
-		if (CURSKEY_META_START && (
-				key >= 0 && key <= CURSKEY_META_END_CHARACTERS))
+		if (CURSKEY_META_START && (key >= 0 && key <= CURSKEY_META_END_CHARACTERS))
 			key = CURSKEY_META_START + key;
 		else
 			return ERR;
@@ -298,14 +255,6 @@ int curskey_mod_key(int key, unsigned int modifiers) {
 	return key;
 }
 
-/* The opposite of curskey_mod_key.
- *
- * Return the keycode with modifiers stripped of.
- *
- * Stores modifier mask in `modifiers` if it is not NULL.
- *
- * Returns ERR if the key is invalid.
- */
 int curskey_unmod_key(int key, unsigned int* modifiers)
 {
 	unsigned int null_store;
@@ -345,18 +294,9 @@ int curskey_unmod_key(int key, unsigned int* modifiers)
 	return key;
 }
 
-/* Return key definition for a ncurses keycode.
- *
- * The returned string is of the format "[C-][M-]KEY".
- *
- * Returns NULL on failure.
- *
- * This function is not thread-safe.
- */
 const char *curskey_get_keydef(int keycode)
 {
 	unsigned int mod;
-	static char buffer[256];
 	char *s = buffer;
 
 	keycode = curskey_unmod_key(keycode, &mod);
@@ -392,28 +332,10 @@ const char *curskey_get_keydef(int keycode)
 	return buffer;
 }
 
-/* Return the ncurses keycode for a key definition.
- *
- * Key definition may be:
- *	- Single character (a, z, ...)
- *	- Character with control-modifier (^x, C-x, c-x, ...)
- *	- Character with meta/alt-modifier (M-x, m-x, A-x, a-x, ...)
- *	- Character with both modifiers (C-M-x, M-C-x, M-^x, ...)
- *	- Curses keyname, no modifiers allowed (KEY_HOME, HOME, F1, F(1), ...)
- *
- * Returns ERR if either
- * 	- The key definition is NULL or empty
- * 	- The key could not be found ("KEY_FOO")
- * 	- The key combination is generally invalid ("C-TAB", "C-RETURN")
- * 	- The key is invalid because of compile time options (the
- * 		`define_key()` function was not available.)
- */
 int curskey_parse(const char *def) {
 	int c;
 	unsigned int mod = 0;
-
-	if (! def)
-		return ERR;
+	assert(def && "def is NULL");
 
 	for (;;) {
 		if (def[0] == '^' && def[1] != '\0') {
@@ -444,16 +366,11 @@ int curskey_parse(const char *def) {
 	return curskey_mod_key(c, mod);
 }
 
-/* Initialize curskey.
- * Returns OK on success, ERR on failure.
- */
 int curskey_init() {
 	keypad(stdscr, TRUE);
 	return create_ncurses_keynames();
 }
 
-/* Destroy curskey.
- */
 void curskey_destroy() {
 	free_ncurses_keynames();
 }
