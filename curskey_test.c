@@ -350,16 +350,13 @@ if (CURSKEY_CAN_META) {
 }
 
 void print_keys() {
-	int i, printed = 0;
+	int i;
 	const char *keydef;
 
 	for (i = 0; i < CURSKEY_KEY_MAX; ++i)
 	{
 		if ((keydef = curskey_get_keydef(i))) {
-			printf("%03d = %-10s = %-10s\t", i, keydef, keyname(i));
-
-			//if (++printed % 3 == 0)
-				printf("\n");
+			printf("%03d = %-10s = %-10s\n", i, keydef, keyname(i));
 		}
 	}
 

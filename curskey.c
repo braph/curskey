@@ -19,16 +19,21 @@
 #include "curskey.h"
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include <assert.h>
 
 #ifdef __cplusplus
-#define _const_cast(TYPE, VALUE) const_cast<TYPE>(VALUE)
-#define _reinterpret_cast(TYPE, VALUE) reinterpret_cast<TYPE>(VALUE)
-#define _malloc(TYPE, SIZE) _reinterpret_cast(
+#define CONST_CAST(TYPE, VALUE)       const_cast<TYPE>(VALUE)
+#define STATIC_CAST(TYPE, VALUE)      static_cast<TYPE>(VALUE)
+#define REINTERPRET_CAST(TYPE, VALUE) reinterpret_cast<TYPE>(VALUE)
+#define MALLOC(TYPE, SIZE)            STATIC_CAST(TYPE, malloc(SIZE))
+#define REALLOC(TYPE, PTR, SIZE)      STATIC_CAST(TYPE, realloc(PTR, SIZE))
 #else
-#define _const_cast(TYPE, VALUE) (TYPE)(VALUE)
-#define _reinterpret_cast(TYPE, VALUE) (TYPE)(VALUE)
-#define _malloc(TYPE, SIZE) malloc(SIZE)
+#define CONST_CAST(TYPE, VALUE)       ((TYPE)(VALUE))
+#define STATIC_CAST(TYPE, VALUE)      ((TYPE)(VALUE))
+#define REINTERPRET_CAST(TYPE, VALUE) ((TYPE)(VALUE))
+#define MALLOC(TYPE, SIZE)            malloc(SIZE)
+#define REALLOC(TYPE, PTR, SIZE)      realloc(PTR, SIZE)
 #endif
 
 struct curskey_key {
@@ -46,16 +51,16 @@ static struct curskey_key *curskey_keynames = NULL;
 // and aliases for existing keys
 static const struct curskey_key curskey_aliases[] = {
 	// Keep this sorted by `keyname`
-	{ _const_cast(char*, "DEL"),      KEY_DEL    },
-	{ _const_cast(char*, "DELETE"),   KEY_DC     },
-	{ _const_cast(char*, "ESCAPE"),   KEY_ESCAPE },
-	{ _const_cast(char*, "INSERT"),   KEY_IC     },
-	{ _const_cast(char*, "PAGEDOWN"), KEY_NPAGE  },
-	{ _const_cast(char*, "PAGEUP"),   KEY_PPAGE  },
-	{ _const_cast(char*, "SPACE"),    KEY_SPACE  },
-	{ _const_cast(char*, "TAB"),      KEY_TAB    }
+	{ CONST_CAST(char*, "DEL"),      KEY_DEL    },
+	{ CONST_CAST(char*, "DELETE"),   KEY_DC     },
+	{ CONST_CAST(char*, "ESCAPE"),   KEY_ESCAPE },
+	{ CONST_CAST(char*, "INSERT"),   KEY_IC     },
+	{ CONST_CAST(char*, "PAGEDOWN"), KEY_NPAGE  },
+	{ CONST_CAST(char*, "PAGEUP"),   KEY_PPAGE  },
+	{ CONST_CAST(char*, "SPACE"),    KEY_SPACE  },
+	{ CONST_CAST(char*, "TAB"),      KEY_TAB    }
 };
-#define ALIASES_SIZE ((int) (sizeof(curskey_aliases) / sizeof(curskey_aliases[0])))
+#define ALIASES_SIZE  STATIC_CAST(int, sizeof(curskey_aliases) / sizeof(curskey_aliases[0]))
 
 // Buffer that is used by the functions
 static char buffer[256];
@@ -66,18 +71,10 @@ static char buffer[256];
 	(name[2] == 'Y' || name[2] == 'y') && \
 	(name[3] == '_'))
 
-#define IS_CONTROL(S) ( \
-	((S[0] == '^') && S[1] != '\0') || ((S[0] == 'C' || S[0] == 'c') && S[1] == '-'))
-
-#define IS_META(S) ( \
-	(S[0] == 'M' || S[0] == 'm' || S[0] == 'A' || S[0] == 'a') && S[1] == '-')
-
-#define IS_SHIFT(S) ( \
-	(S[0] == 'S' || S[0] == 's') && S[1] == '-')
-
 static int curskey_key_cmp(const void *a, const void *b) {
-	return strcmp(((struct curskey_key*) a)->keyname,
-			((struct curskey_key*) b)->keyname);
+	return strcmp(
+		STATIC_CAST(const struct curskey_key*, a)->keyname,
+		STATIC_CAST(const struct curskey_key*, b)->keyname);
 }
 
 static int curskey_find(const struct curskey_key *table, int size, const char *name) {
@@ -101,8 +98,11 @@ static int curskey_find(const struct curskey_key *table, int size, const char *n
 	}
 }
 
-const char* curskey_keyname(int keycode) {
+const char* curskey_keyname(int keycode)
+	CURSES_LIB_NOEXCEPT
+{
 	int i;
+	static char buffer[8];
 
 	if (keycode >= KEY_F(1) && keycode <= KEY_F(63)) {
 		i = keycode - KEY_F(0);
@@ -133,11 +133,10 @@ const char* curskey_keyname(int keycode) {
 }
 
 int curskey_keycode(const char *name)
+	CURSES_LIB_NOEXCEPT
 {
 	int i;
-
-	if (! name)
-		return ERR;
+	assert(name && "name is NULL");
 
 	if (STARTSWITH_KEY(name))
 		name += 4;
@@ -146,7 +145,7 @@ int curskey_keycode(const char *name)
 		i = (name[1] == '(' ? 2 : 1);
 
 		if (name[i] >= '0' && name[i] <= '9') {
-			i = atoi(name + i);
+			i = strtoimax(name + i, NULL, 10);
 			if (i >= 1 && i <= 63)
 				return KEY_F(i);
 		}
@@ -175,17 +174,17 @@ static void free_ncurses_keynames() {
  * Create the list of ncurses KEY_ constants.
  * Returns OK on success, ERR on failure.
  */
-int create_ncurses_keynames() {
-	char	*name;
-	struct curskey_key *tmp;
+static int create_ncurses_keynames() {
+	char *name;
+	void *tmp;
 
 	free_ncurses_keynames();
-	curskey_keynames = (struct curskey_key*) malloc((KEY_MAX - KEY_MIN) * sizeof(struct curskey_key));
+	curskey_keynames = MALLOC(struct curskey_key*, (KEY_MAX - KEY_MIN) * sizeof(struct curskey_key));
 	if (!curskey_keynames)
 		return ERR;
 
 	for (int key = KEY_MIN; key != KEY_MAX; ++key) {
-		name = (char*) keyname(key);
+		name = CONST_CAST(char*, keyname(key));
 
 		if (!name || !STARTSWITH_KEY(name))
 			continue;
@@ -203,10 +202,10 @@ int create_ncurses_keynames() {
 		++curskey_keynames_size;
 	}
 
-	tmp = (struct curskey_key*) realloc(curskey_keynames, curskey_keynames_size * sizeof(struct curskey_key));
+	tmp = realloc(curskey_keynames, curskey_keynames_size * sizeof(struct curskey_key));
 	if (!tmp)
 		goto ERROR;
-	curskey_keynames = tmp;
+	curskey_keynames = STATIC_CAST(struct curskey_key*, tmp);
 
 	qsort(curskey_keynames, curskey_keynames_size, sizeof(struct curskey_key), curskey_key_cmp);
 
@@ -217,7 +216,9 @@ ERROR:
 	return ERR;
 }
 
-int curskey_define_meta_keys(int meta_start) {
+int curskey_define_meta_keys(int meta_start)
+	CURSES_LIB_NOEXCEPT
+{
 #ifdef NCURSES_VERSION
 	CURSKEY_META_START = meta_start;
 
@@ -237,7 +238,9 @@ int curskey_define_meta_keys(int meta_start) {
 	return ERR;
 }
 
-int curskey_mod_key(int key, unsigned int modifiers) {
+int curskey_mod_key(int key, unsigned int modifiers)
+	CURSES_LIB_NOEXCEPT
+{
 	if (modifiers & CURSKEY_MOD_CNTRL) {
 		if ((key >= 'A' && key <= '_') || (key >= 'a' && key <= 'z') || key == ' ')
 			key = key % 32;
@@ -256,6 +259,7 @@ int curskey_mod_key(int key, unsigned int modifiers) {
 }
 
 int curskey_unmod_key(int key, unsigned int* modifiers)
+	CURSES_LIB_NOEXCEPT
 {
 	unsigned int null_store;
 	if (!modifiers)
@@ -295,6 +299,7 @@ int curskey_unmod_key(int key, unsigned int* modifiers)
 }
 
 const char *curskey_get_keydef(int keycode)
+	CURSES_LIB_NOEXCEPT
 {
 	unsigned int mod;
 	char *s = buffer;
@@ -332,17 +337,31 @@ const char *curskey_get_keydef(int keycode)
 	return buffer;
 }
 
-int curskey_parse(const char *def) {
+#define IS_CARET(S) ( \
+	(S[0] == '^') && S[1] != '\0')
+
+#define IS_CONTROL(S) ( \
+	((S[0] == 'C' || S[0] == 'c') && S[1] == '-'))
+
+#define IS_META(S) ( \
+	(S[0] == 'M' || S[0] == 'm' || S[0] == 'A' || S[0] == 'a') && S[1] == '-')
+
+#define IS_SHIFT(S) ( \
+	(S[0] == 'S' || S[0] == 's') && S[1] == '-')
+
+int curskey_parse(const char *def)
+	CURSES_LIB_NOEXCEPT
+{
 	int c;
 	unsigned int mod = 0;
 	assert(def && "def is NULL");
 
 	for (;;) {
-		if (def[0] == '^' && def[1] != '\0') {
+		if (IS_CARET(def)) {
 			++def;
 			mod |= CURSKEY_MOD_CNTRL;
 		}
-		else if ((def[0] == 'C' || def[0] == 'c') && def[1] == '-') {
+		else if (IS_CONTROL(def)) {
 			def += 2;
 			mod |= CURSKEY_MOD_CNTRL;
 		}
@@ -366,14 +385,147 @@ int curskey_parse(const char *def) {
 	return curskey_mod_key(c, mod);
 }
 
-int curskey_init() {
+int curskey_init()
+	CURSES_LIB_NOEXCEPT
+{
 	keypad(stdscr, TRUE);
 	return create_ncurses_keynames();
 }
 
-void curskey_destroy() {
+void curskey_destroy()
+	CURSES_LIB_NOEXCEPT
+{
 	free_ncurses_keynames();
 }
+
+/* ============================================================================
+ * Color functions ============================================================
+ * ==========================================================================*/
+
+short curses_color_parse(const char* s)
+	CURSES_LIB_NOEXCEPT
+{
+	if (!strcmp(s, "default"))  return -1;
+	if (!strcmp(s, "black"))    return COLOR_BLACK;
+	if (!strcmp(s, "red"))      return COLOR_RED;
+	if (!strcmp(s, "green"))    return COLOR_GREEN;
+	if (!strcmp(s, "yellow"))   return COLOR_YELLOW;
+	if (!strcmp(s, "blue"))     return COLOR_BLUE;
+	if (!strcmp(s, "magenta"))  return COLOR_MAGENTA;
+	if (!strcmp(s, "cyan"))     return COLOR_CYAN;
+	if (!strcmp(s, "white"))    return COLOR_WHITE;
+
+	char *end;
+	intmax_t i = strtoimax(s, &end, 10);
+	if (*s && !*end && i >= -1 && i <= 255)
+		return i;
+
+	return COLOR_INVALID;
+}
+
+const char* curses_color_tostring(short color)
+	CURSES_LIB_NOEXCEPT
+{
+	static char buf[10];
+	switch (color) {
+		case -1:            return "default";
+		case COLOR_BLACK:   return "black";
+		case COLOR_RED:     return "red";
+		case COLOR_GREEN:   return "green";
+		case COLOR_YELLOW:  return "yellow";
+		case COLOR_BLUE:    return "blue";
+		case COLOR_MAGENTA: return "magenta";
+		case COLOR_CYAN:    return "cyan";
+		case COLOR_WHITE:   return "white";
+		default:
+			{
+				buf[9] = 0;
+				char* s = &buf[9];
+				while (color) {
+					*--s = '0' + (color % 10);
+					color /= 10;
+				}
+				return s;
+			}
+	}
+	return NULL;
+}
+
+/* ============================================================================
+ * Attribute functions ========================================================
+ * ==========================================================================*/
+
+unsigned int curses_attr_parse(const char* s)
+	CURSES_LIB_NOEXCEPT
+{
+	if (!strcmp(s, "bold"))       return A_BOLD;
+	if (!strcmp(s, "dim"))        return A_DIM;
+	if (!strcmp(s, "blink"))      return A_BLINK;
+	if (!strcmp(s, "italic"))
+#ifdef A_ITALIC
+		return A_ITALIC;
+#else
+		return A_NORMAL;
+#endif
+	if (!strcmp(s, "normal"))     return A_NORMAL;
+	if (!strcmp(s, "standout"))   return A_STANDOUT;
+	if (!strcmp(s, "underline"))  return A_UNDERLINE;
+	return A_INVALID;
+}
+
+const char* curses_attr_tostring(unsigned int attribute)
+	CURSES_LIB_NOEXCEPT
+{
+	switch (attribute) {
+		case A_BOLD:      return "bold";
+		case A_DIM:       return "dim";
+		case A_BLINK:     return "blink";
+#ifdef A_ITALIC
+		case A_ITALIC:    return "italic";
+#endif
+		case A_NORMAL:    return "normal";
+		case A_STANDOUT:  return "standout";
+		case A_UNDERLINE: return "underline";
+		default:          return NULL;
+	}
+}
+
+/* ============================================================================
+ * Create pair functions ======================================================
+ * ==========================================================================*/
+
+static int last_id = 0;
+static struct color_pair {
+	short fg;
+	short bg;
+} color_pairs[LIB_CURSES_COLORS];
+
+int curses_create_color_pair(short fg, short bg)
+	CURSES_LIB_NOEXCEPT
+{
+	int pair_id;
+	for (pair_id = 1; pair_id <= last_id; ++pair_id)
+		if (color_pairs[pair_id].fg == fg && color_pairs[pair_id].bg == bg)
+			return pair_id;
+
+	if (last_id == LIB_CURSES_COLORS)
+		return 0;
+
+	color_pairs[pair_id].fg = fg;
+	color_pairs[pair_id].bg = bg;
+	init_pair(pair_id, fg, bg);
+	return ++last_id;
+}
+
+void curses_reset_color_pairs()
+	CURSES_LIB_NOEXCEPT
+{
+	last_id = 0;
+}
+
+/* ============================================================================
+ * Unsued code ================================================================
+ * ==========================================================================*/
 
 // UNUSED CODE {{{
 #if 0
