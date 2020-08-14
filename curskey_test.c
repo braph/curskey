@@ -6,6 +6,8 @@
 #include <string.h>
 #include "curskey.h"
 
+#define CURSKEY_CAN_META 1 // TODO
+
 int count = 0;					// Test count
 int having_int; 				// Test result, int
 const char* having_str;			// Test result, str

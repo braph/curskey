@@ -5,8 +5,10 @@ build:
 
 test: build
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o curskey_test.c -o curskey_test
-	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o curskey_example.c -o curskey_example
 	if which valgrind; then valgrind ./curskey_test; else ./curskey_test; fi
+
+example: build
+	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o curskey_example.c -o curskey_example
 
 doc: curskey.h
 	doxygen documentation.doxy

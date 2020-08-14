@@ -51,10 +51,11 @@
 /// \defgroup CONF Library configuration
 /// @{
 /// Defines how many color pairs can be used
-#define LIB_CURSES_COLORS  256
+#define CURSES_LIB_COLORS  256
 /// Defines the range of characters which should be "meta-able"
 #define CURSKEY_META_END_CHARACTERS 127
-
+/// The starting keycode for enumerating meta/alt key combinations
+#define CURSKEY_META_START 128
 /// @}
 
 /// \defgroup CODES Return codes
@@ -82,19 +83,13 @@
 #define CURSKEY_MOD_ALT     2U
 /// @}
 
-/// Holds the character that should be interpreted as RETURN.
+/// Holds the character that should be interpreted as **RETURN**.
 /// Depending on whether nl() or nonl() was called this may be either '\\n' or '\r'.
 /// It defaults to '\\n'.
 extern int KEY_RETURN;
 
-/// The starting keycode for enumerating meta/alt key combinations
-extern int CURSKEY_META_START;
-
-// Macro for checking if meta keys are available
-#define CURSKEY_CAN_META (CURSKEY_META_START+0)
-
-// Holds the maximum keycode used by curskey
-extern int CURSKEY_KEY_MAX;
+#define CURSKEY_MAX_HELPER(A,B) ((A) > (B) ? (A) : (B))
+#define CURSKEY_KEY_MAX         CURSKEY_MAX_HELPER(KEY_MAX, CURSKEY_META_START + CURSKEY_META_END_CHARACTERS)
 
 #ifdef __cplusplus
 #define CURSES_LIB_NOEXCEPT noexcept
@@ -108,7 +103,7 @@ extern int CURSKEY_KEY_MAX;
 
 /**
  * @brief Initialize curskey.
- * @return \b OK on success, \b ERR on failure.
+ * @return **OK** on success, **ERR** on failure
  */
 int curskey_init() CURSES_LIB_NOEXCEPT;
 
@@ -121,25 +116,56 @@ void curskey_destroy() CURSES_LIB_NOEXCEPT;
  * @brief Return the keycode for a key with modifiers applied.
  *
  * Available modifiers are:
- * 	- CURSKEY_MOD_META / CURSKEY_MOD_ALT
- * 	- CURSKEY_MOD_CNTRL
+ * 	- **CURSKEY_MOD_META** / **CURSKEY_MOD_ALT**
+ * 	- **CURSKEY_MOD_CNTRL**
  *
  * See also the macros curskey_meta_key(), curskey_cntrl_key().
  *
- * @return ERR if the modifiers cannot be applied to this key.
+ * @note   This is implemented as a macro since since it shall be usable
+ *         as a constant expression
+ *
+ * @return Keycode or **ERR** if the modifiers cannot be applied to this key.
  */
-int curskey_mod_key(int key, unsigned int modifiers) CURSES_LIB_NOEXCEPT;
+#define curskey_mod_key(KEY, MODIFIERS) \
+(                                                                             \
+	((MODIFIERS) == 0) ? (                                                    \
+		KEY                                                                   \
+	)                                                                         \
+	:((MODIFIERS) == CURSKEY_MOD_CNTRL) ? (                                   \
+		((KEY >= 'A' && KEY <= '_') || (KEY >= 'a' && KEY <= 'z') || KEY == ' ') ? ( \
+			KEY % 32                                                          \
+		) : (                                                                 \
+			ERR                                                               \
+		)                                                                     \
+	)                                                                         \
+	:((MODIFIERS) == CURSKEY_MOD_META) ? (                                    \
+		(KEY >= 0 && KEY <= CURSKEY_META_END_CHARACTERS) ? (                  \
+			KEY + CURSKEY_META_START                                          \
+		) : (                                                                 \
+			ERR                                                               \
+		)                                                                     \
+	)                                                                         \
+	:((MODIFIERS) == (CURSKEY_MOD_CNTRL|CURSKEY_MOD_META)) ? (                \
+		((KEY >= 'A' && KEY <= '_') || (KEY >= 'a' && KEY <= 'z') || KEY == ' ') ? ( \
+			KEY % 32 + CURSKEY_META_START                                     \
+		) : (                                                                 \
+			ERR                                                               \
+		)                                                                     \
+	)                                                                         \
+	:(                                                                        \
+		ERR                                                                   \
+	)                                                                         \
+)
 
 /**
  * @brief The opposite of curskey_mod_key.
  *
- * Stores modifier mask in `modifiers` if it is not \b NULL.
+ * Stores modifier mask in `modifiers` if it is not **NULL**.
  *
- * @return The keycode with modifiers stripped of or \b ERR if the key is invalid.
+ * @return The keycode with modifiers stripped of or **ERR** if the key is invalid.
  */
 int curskey_unmod_key(int key, unsigned int *modifiers) CURSES_LIB_NOEXCEPT;
 
-// TODO....
 #define curskey_meta_key(KEY) \
 	curskey_mod_key(KEY, CURSKEY_MOD_META)
 
@@ -163,7 +189,7 @@ int curskey_unmod_key(int key, unsigned int *modifiers) CURSES_LIB_NOEXCEPT;
  * 	- The key is invalid because of compile time options (the
  * 		`define_key()` function was not available.)
  *
- * 	@return The curses keycode or \b ERR
+ * 	@return The curses keycode or **ERR** on error 
  */
 int curskey_parse(const char *keydef) CURSES_LIB_NOEXCEPT;
 
@@ -172,7 +198,7 @@ int curskey_parse(const char *keydef) CURSES_LIB_NOEXCEPT;
  *
  * The returned string is of the format "[C-][M-]KEY".
  *
- * This function is not thread-safe.
+ * @note This function is not thread-safe.
  *
  * @return The key definition or \b NULL on error
  */
@@ -181,9 +207,9 @@ const char* curskey_get_keydef(int keycode) CURSES_LIB_NOEXCEPT;
 /**
  * @brief Defines meta escape sequences in curses.
  *
- * @return \b OK if meta keys are available, \b ERR otherwise.
+ * @return **OK** if meta keys are available, **ERR** otherwise.
  */
-int curskey_define_meta_keys(int meta_start) CURSES_LIB_NOEXCEPT;
+int curskey_define_meta_keys() CURSES_LIB_NOEXCEPT;
 
 /* Helper functions */
 
@@ -191,7 +217,7 @@ int curskey_define_meta_keys(int meta_start) CURSES_LIB_NOEXCEPT;
  * @brief Translate the name of a curses KEY_ constant to its value.
  * 	"KEY_DOWN" -> 258
  *
- * @return \b ERR on failure. TODO
+ * @return Keycode or **ERR** on failure.
  */
 int curskey_keycode(const char *keyname) CURSES_LIB_NOEXCEPT;
 
@@ -201,7 +227,7 @@ int curskey_keycode(const char *keyname) CURSES_LIB_NOEXCEPT;
  *
  * @note This function is not thread-safe.
  *
- * @return The name of the key or \b NULL on failure.
+ * @return The name of the key or **NULL** on failure.
  */
 const char* curskey_keyname(int keycode) CURSES_LIB_NOEXCEPT;
 
@@ -213,16 +239,16 @@ const char* curskey_keyname(int keycode) CURSES_LIB_NOEXCEPT;
  * @brief Parses a color string
  *
  * Possible colors are
- *   - \b black, \b red, \b green, \b yellow, \b blue, \b magenta, \b cyan, \b white or \b default
- *   - a number between \b -1 and \b 255
+ *   - **black**, **red**, **green**, **yellow**, **blue**, **magenta**, **cyan**, **white** or **default**
+ *   - a number between **-1** and **255**
  *
- * @return Color or \b COLOR_INVALID
+ * @return Color number or **COLOR_INVALID** on error
  */
 short curses_color_parse(const char* s) CURSES_LIB_NOEXCEPT;
 
 /**
  * @brief Get string for a curses color
- * @return string or \b NULL
+ * @return string or **NULL** on error
  */
 const char* curses_color_tostring(short color) CURSES_LIB_NOEXCEPT;
 
@@ -234,15 +260,18 @@ const char* curses_color_tostring(short color) CURSES_LIB_NOEXCEPT;
  * @brief Parse an attribute string
  *
  * Possible attributes are:
- *   \b bold, \b dim, \b blink, \b italic, \b standout, \b underline or \b normal
+ *   **bold**, **dim**, **blink**, **italic**, **standout**, **underline** or **normal**
  *
- * @return Curses attribute or \b A_INVALID
+ * @note   If the **A_ITALIC** attribute is not available at compile time,
+ *         **A_NORMAL** will be returned for **italic**
+ *
+ * @return Curses attribute or **A_INVALID** on error
  */
 unsigned int curses_attr_parse(const char* s) CURSES_LIB_NOEXCEPT;
 
 /**
  * @brief  Get string for a curses attribute
- * @return \b string or \b NULL
+ * @return String or **NULL** on error
  */
 const char* curses_attr_tostring(unsigned int attribute) CURSES_LIB_NOEXCEPT;
 
@@ -258,7 +287,6 @@ int curses_create_color_pair(short fg, short bg) CURSES_LIB_NOEXCEPT;
 
 /**
  * @brief TODO
- * @return TODO
  */
 void curses_reset_color_pairs() CURSES_LIB_NOEXCEPT;
 
@@ -268,13 +296,13 @@ void curses_reset_color_pairs() CURSES_LIB_NOEXCEPT;
 
 #ifdef __cplusplus
 #include <string>
-static inline short curses_color_parse(const std::string& s)
+static inline short curses_color_parse(const std::string& color)
   CURSES_LIB_NOEXCEPT
-{ return curses_color_parse(s.c_str()); }
+{ return curses_color_parse(color.c_str()); }
 
-static inline unsigned int curses_attr_parse(const std::string& s)
+static inline unsigned int curses_attr_parse(const std::string& attribute)
   CURSES_LIB_NOEXCEPT
-{ return curses_color_parse(s.c_str()); }
+{ return curses_color_parse(attribute.c_str()); }
 
 static inline int curskey_parse(const std::string& keydef)
   CURSES_LIB_NOEXCEPT

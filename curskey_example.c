@@ -1,23 +1,31 @@
 #include "curskey.h"
 #include <assert.h>
 
+#define CNTRL   CURSKEY_MOD_CNTRL
+#define ALT     CURSKEY_MOD_META
+#define MOD_KEY curskey_mod_key
+
 int main() {
 	initscr(); // Has to be called!
 	noecho();
+
 	if (curskey_init() == OK) {
-		//int key_alt_r = curskey_meta_key('r');
-		//int key_ctrl_r = curskey_cntrl_key('r');
-		//int key_ctrl_alt_r = curskey_mod_key('r', CURSKEY_MOD_ALT|CURSKEY_MOD_CNTRL);
+    curskey_define_meta_keys(-1);
 
-		int key0 = curskey_parse("C-M-r");
-		int key1 = curskey_mod_key('r', CURSKEY_MOD_ALT|CURSKEY_MOD_CNTRL);
-		assert(key0 == key1);
+    assert(MOD_KEY('r', CNTRL|ALT) == curskey_parse("C-M-r"));
 
-		for (int key; (key = getch()) != -1;)
-			if (key == key0)
-				addstr("Control-Meta-R pressed");
-			else
-				addstr(curskey_get_keydef(key));
+		for (int key; (key = getch()) != -1;) {
+      clear();
+      switch (key) {
+        case 'k':                     addstr("case 'k'");       break;
+        case MOD_KEY('k', CNTRL):     addstr("case 'C-k'");     break;
+        case MOD_KEY('k', ALT):       addstr("case 'M-k'");     break;
+        case MOD_KEY('k', CNTRL|ALT): addstr("case 'C-A-k'");   break;
+        default:                      addstr("default: ");
+                                      addstr(curskey_get_keydef(key));
+      }
+    }
+
 		curskey_destroy();
 	}
 }

@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include <assert.h>
 
 #ifdef __cplusplus
 #define CONST_CAST(TYPE, VALUE)       const_cast<TYPE>(VALUE)
@@ -36,14 +35,14 @@
 #define REALLOC(TYPE, PTR, SIZE)      realloc(PTR, SIZE)
 #endif
 
+#define UPPER(C) (C & ~0x20)
+
 struct curskey_key {
 	char *keyname;
 	int keycode;
 };
 
 int KEY_RETURN = '\n';
-int CURSKEY_META_START = 0;
-int CURSKEY_KEY_MAX = KEY_MAX;
 static int curskey_keynames_size = 0;
 static struct curskey_key *curskey_keynames = NULL;
 
@@ -66,9 +65,9 @@ static const struct curskey_key curskey_aliases[] = {
 static char buffer[256];
 
 #define STARTSWITH_KEY(S) ( \
-	(name[0] == 'K' || name[0] == 'k') && \
-	(name[1] == 'E' || name[1] == 'e') && \
-	(name[2] == 'Y' || name[2] == 'y') && \
+	(UPPER(name[0]) == 'K') && \
+	(UPPER(name[1]) == 'E') && \
+	(UPPER(name[2]) == 'Y') && \
 	(name[3] == '_'))
 
 static int curskey_key_cmp(const void *a, const void *b) {
@@ -136,12 +135,11 @@ int curskey_keycode(const char *name)
 	CURSES_LIB_NOEXCEPT
 {
 	int i;
-	assert(name && "name is NULL");
 
 	if (STARTSWITH_KEY(name))
 		name += 4;
 
-	if (name[0] == 'F' || name[0] == 'f') {
+	if (UPPER(name[0]) == 'F') {
 		i = (name[1] == '(' ? 2 : 1);
 
 		if (name[i] >= '0' && name[i] <= '9') {
@@ -216,12 +214,10 @@ ERROR:
 	return ERR;
 }
 
-int curskey_define_meta_keys(int meta_start)
+int curskey_define_meta_keys()
 	CURSES_LIB_NOEXCEPT
 {
 #ifdef NCURSES_VERSION
-	CURSKEY_META_START = meta_start;
-
 	int ch;
 	int curs_keycode = CURSKEY_META_START;
 	char key_sequence[3] = "\e ";
@@ -232,12 +228,12 @@ int curskey_define_meta_keys(int meta_start)
 		++curs_keycode;
 	}
 
-	CURSKEY_KEY_MAX = CURSKEY_META_START + CURSKEY_META_END_CHARACTERS;
 	return OK;
 #endif
 	return ERR;
 }
 
+#if 0
 int curskey_mod_key(int key, unsigned int modifiers)
 	CURSES_LIB_NOEXCEPT
 {
@@ -257,6 +253,7 @@ int curskey_mod_key(int key, unsigned int modifiers)
 
 	return key;
 }
+#endif
 
 int curskey_unmod_key(int key, unsigned int* modifiers)
 	CURSES_LIB_NOEXCEPT
@@ -270,14 +267,7 @@ int curskey_unmod_key(int key, unsigned int* modifiers)
 	if (key < 0)
 		return ERR;
 
-	/*
-	if (key >= KEY_MIN && key <= KEY_MAX)
-		return key;
-	*/
-
-	if (CURSKEY_CAN_META &&
-			key >= CURSKEY_META_START &&
-			key <= CURSKEY_META_START + CURSKEY_META_END_CHARACTERS)
+	if (key >= CURSKEY_META_START && key <= CURSKEY_META_START + CURSKEY_META_END_CHARACTERS)
 	{
 		key = key - CURSKEY_META_START;
 		*modifiers |= CURSKEY_MOD_META;
@@ -337,24 +327,23 @@ const char *curskey_get_keydef(int keycode)
 	return buffer;
 }
 
-#define IS_CARET(S) ( \
-	(S[0] == '^') && S[1] != '\0')
+#define IS_CARET(S) \
+	(S[0] == '^' && S[1] != '\0')
 
-#define IS_CONTROL(S) ( \
-	((S[0] == 'C' || S[0] == 'c') && S[1] == '-'))
+#define IS_CONTROL(S) \
+	(UPPER(S[0]) == 'C' && S[1] == '-')
 
-#define IS_META(S) ( \
-	(S[0] == 'M' || S[0] == 'm' || S[0] == 'A' || S[0] == 'a') && S[1] == '-')
+#define IS_META(S) \
+	((UPPER(S[0]) == 'M' || UPPER(S[0]) == 'A') && S[1] == '-')
 
-#define IS_SHIFT(S) ( \
-	(S[0] == 'S' || S[0] == 's') && S[1] == '-')
+#define IS_SHIFT(S) \
+	(UPPER(S[0]) == 'S' && S[1] == '-')
 
 int curskey_parse(const char *def)
 	CURSES_LIB_NOEXCEPT
 {
 	int c;
 	unsigned int mod = 0;
-	assert(def && "def is NULL");
 
 	for (;;) {
 		if (IS_CARET(def)) {
@@ -366,8 +355,8 @@ int curskey_parse(const char *def)
 			mod |= CURSKEY_MOD_CNTRL;
 		}
 		else if (IS_META(def)) {
-			if (! CURSKEY_CAN_META)
-				return ERR;
+			//if (! CURSKEY_CAN_META)
+			//	return ERR;
 			def += 2;
 			mod |= CURSKEY_MOD_ALT;
 		}
@@ -439,6 +428,7 @@ const char* curses_color_tostring(short color)
 		case COLOR_WHITE:   return "white";
 		default:
 			{
+				// TODO: handle negative numbers
 				buf[9] = 0;
 				char* s = &buf[9];
 				while (color) {
@@ -448,6 +438,7 @@ const char* curses_color_tostring(short color)
 				return s;
 			}
 	}
+
 	return NULL;
 }
 
@@ -467,9 +458,9 @@ unsigned int curses_attr_parse(const char* s)
 #else
 		return A_NORMAL;
 #endif
-	if (!strcmp(s, "normal"))     return A_NORMAL;
 	if (!strcmp(s, "standout"))   return A_STANDOUT;
 	if (!strcmp(s, "underline"))  return A_UNDERLINE;
+	if (!strcmp(s, "normal"))     return A_NORMAL;
 	return A_INVALID;
 }
 
@@ -483,9 +474,9 @@ const char* curses_attr_tostring(unsigned int attribute)
 #ifdef A_ITALIC
 		case A_ITALIC:    return "italic";
 #endif
-		case A_NORMAL:    return "normal";
 		case A_STANDOUT:  return "standout";
 		case A_UNDERLINE: return "underline";
+		case A_NORMAL:    return "normal";
 		default:          return NULL;
 	}
 }
@@ -498,7 +489,7 @@ static int last_id = 0;
 static struct color_pair {
 	short fg;
 	short bg;
-} color_pairs[LIB_CURSES_COLORS];
+} color_pairs[CURSES_LIB_COLORS];
 
 int curses_create_color_pair(short fg, short bg)
 	CURSES_LIB_NOEXCEPT
@@ -508,7 +499,7 @@ int curses_create_color_pair(short fg, short bg)
 		if (color_pairs[pair_id].fg == fg && color_pairs[pair_id].bg == bg)
 			return pair_id;
 
-	if (last_id == LIB_CURSES_COLORS)
+	if (last_id == CURSES_LIB_COLORS)
 		return 0;
 
 	color_pairs[pair_id].fg = fg;
@@ -522,49 +513,3 @@ void curses_reset_color_pairs()
 {
 	last_id = 0;
 }
-
-/* ============================================================================
- * Unsued code ================================================================
- * ==========================================================================*/
-
-// UNUSED CODE {{{
-#if 0
-/*
- * Return the "normalized" keyname, without preceding "KEY_"
- * and parentheses of function keys removed:
- *	 KEY_HOME -> HOME
- *	 HOME	  -> HOME
- *	 KEY_F(1) -> F1
- *
- * String will be truncated to 64 characters.
- * Returned string must be free()d.
- */
-char *curskey_normalize(const char *name)
-{
-	char normalized[64];
-	int i = 0;
-
-	if (! name)
-		return NULL;
-
-	if (STARTSWITH_KEY(name))
-		name += 4;
-
-	if (name[0] == 'F' || name[0] == 'f') {
-		for (; *name; ++name) {
-			if (*name == '(' || *name == ')') {
-				// ignore
-			}
-			else if (i < sizeof(normalized) - 1) {
-				normalized[i++] = *name;
-			}
-		}
-		normalized[i] = '\0';
-		return strdup(normalized);
-	}
-	else {
-		return strdup(name);
-	}
-}
-#endif
-// }}} UNUSED CODE
