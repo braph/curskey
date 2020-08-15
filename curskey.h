@@ -52,10 +52,10 @@
 /// @{
 /// Defines how many color pairs can be used
 #define CURSES_LIB_COLORS  256
-/// Defines the range of characters which should be "meta-able"
-#define CURSKEY_META_END_CHARACTERS 127
 /// The starting keycode for enumerating meta/alt key combinations
 #define CURSKEY_META_START 128
+/// Defines the range of characters which should be "meta-able"
+#define CURSKEY_META_RANGE 127
 /// @}
 
 /// \defgroup CODES Return codes
@@ -89,7 +89,7 @@
 extern int KEY_RETURN;
 
 #define CURSKEY_MAX_HELPER(A,B) ((A) > (B) ? (A) : (B))
-#define CURSKEY_KEY_MAX         CURSKEY_MAX_HELPER(KEY_MAX, CURSKEY_META_START + CURSKEY_META_END_CHARACTERS)
+#define CURSKEY_KEY_MAX         CURSKEY_MAX_HELPER(KEY_MAX, CURSKEY_META_START + CURSKEY_META_RANGE)
 
 #ifdef __cplusplus
 #define CURSES_LIB_NOEXCEPT noexcept
@@ -139,7 +139,7 @@ void curskey_destroy() CURSES_LIB_NOEXCEPT;
 		)                                                                     \
 	)                                                                         \
 	:((MODIFIERS) == CURSKEY_MOD_META) ? (                                    \
-		(KEY >= 0 && KEY <= CURSKEY_META_END_CHARACTERS) ? (                  \
+		(KEY >= 0 && KEY <= CURSKEY_META_RANGE) ? (                           \
 			KEY + CURSKEY_META_START                                          \
 		) : (                                                                 \
 			ERR                                                               \
@@ -182,7 +182,7 @@ int curskey_unmod_key(int key, unsigned int *modifiers) CURSES_LIB_NOEXCEPT;
  *	- Character with both modifiers (C-M-x, M-C-x, M-^x, ...)
  *	- Curses keyname, no modifiers allowed (KEY_HOME, HOME, F1, F(1), ...)
  *
- * Returns ERR if either
+ * Returns **ERR** if either
  * 	- The key definition is NULL or empty
  * 	- The key could not be found ("KEY_FOO")
  * 	- The key combination is generally invalid ("C-TAB", "C-RETURN")
@@ -219,7 +219,7 @@ int curskey_define_meta_keys() CURSES_LIB_NOEXCEPT;
  *
  * @return Keycode or **ERR** on failure.
  */
-int curskey_keycode(const char *keyname) CURSES_LIB_NOEXCEPT;
+//int curskey_keycode(const char *keyname) CURSES_LIB_NOEXCEPT;
 
 /**
  * @brief Like curses keyname(), translates the value of a KEY_ constant to its name,
@@ -229,7 +229,7 @@ int curskey_keycode(const char *keyname) CURSES_LIB_NOEXCEPT;
  *
  * @return The name of the key or **NULL** on failure.
  */
-const char* curskey_keyname(int keycode) CURSES_LIB_NOEXCEPT;
+//const char* curskey_keyname(int keycode) CURSES_LIB_NOEXCEPT;
 
 /* ============================================================================
  * Color functions ============================================================
@@ -280,13 +280,13 @@ const char* curses_attr_tostring(unsigned int attribute) CURSES_LIB_NOEXCEPT;
  * ==========================================================================*/
 
 /**
- * @brief TODO
- * @return TODO
+ * @brief  Create a color pair
+ * @return Color pair or **ERR** on error
  */
 int curses_create_color_pair(short fg, short bg) CURSES_LIB_NOEXCEPT;
 
 /**
- * @brief TODO
+ * @brief Resets the color pairs created by curses_create_color_pair()
  */
 void curses_reset_color_pairs() CURSES_LIB_NOEXCEPT;
 

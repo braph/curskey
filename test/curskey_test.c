@@ -4,9 +4,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "curskey.h"
-
-#define CURSKEY_CAN_META 1 // TODO
+#include "../curskey.h"
 
 int count = 0;					// Test count
 int having_int; 				// Test result, int
@@ -82,16 +80,17 @@ void do_tests() {
 	// curskey_keycode() ======================================================
 	// ========================================================================
 
-	test (127,           curskey_keycode("DEL"));    // aliased
-	test (' ',           curskey_keycode("SPACE"));  // aliased
-	test ('\t',          curskey_keycode("TAB"));    // aliased
-	test ('\n',          curskey_keycode("RETURN")); // aliased
-	test (KEY_ESCAPE,    curskey_keycode("ESCAPE")); // aliased
+#if 0
+	test (127,           curskey_keycode("DEL"));      // aliased
+	test (' ',           curskey_keycode("SPACE"));    // aliased
+	test ('\t',          curskey_keycode("TAB"));      // aliased
+	test ('\n',          curskey_keycode("RETURN"));   // aliased
+	test (KEY_ESCAPE,    curskey_keycode("ESCAPE"));   // aliased
 	test (KEY_HOME,      curskey_keycode("HOME"));
-	test (KEY_PAGEUP,    curskey_keycode("PAGEUP"));
-	test (KEY_PAGEDOWN,  curskey_keycode("PAGEDOWN"));
-	test (KEY_INSERT,    curskey_keycode("INSERT"));
-	test (KEY_DELETE,    curskey_keycode("DELETE"));
+	test (KEY_PAGEUP,    curskey_keycode("PAGEUP"));   // aliased
+	test (KEY_PAGEDOWN,  curskey_keycode("PAGEDOWN")); // aliased
+	test (KEY_INSERT,    curskey_keycode("INSERT"));   // aliased
+	test (KEY_DELETE,    curskey_keycode("DELETE"));   // aliased
 	test (KEY_UP,        curskey_keycode("UP"));
 	test (KEY_DOWN,      curskey_keycode("DOWN"));
 	test (KEY_LEFT,      curskey_keycode("LEFT"));
@@ -119,14 +118,16 @@ void do_tests() {
 	test (ERR,           curskey_keycode("a"));
 	test (ERR,           curskey_keycode("foo"));
 	test (ERR,           curskey_keycode("F64"));
+#endif
 
 	// ========================================================================
 	// curskey_cntrl_key() ====================================================
 	// ========================================================================
-
 	test (0,             curskey_cntrl_key(KEY_SPACE));
 	test (1,             curskey_cntrl_key('a'));
 	test (1,             curskey_cntrl_key('A'));
+	test (26,            curskey_cntrl_key('z'));
+	test (26,            curskey_cntrl_key('Z'));
 	test (ERR,           curskey_cntrl_key(-1));
 	test (ERR,           curskey_cntrl_key(0));
 	test (ERR,           curskey_cntrl_key(33));
@@ -139,24 +140,23 @@ void do_tests() {
 	// ========================================================================
 	// curskey_meta_key() =====================================================
 	// ========================================================================
-if (CURSKEY_CAN_META) {
 	test (ERR,          curskey_meta_key(-1));
 	test (ERR,          curskey_meta_key(128));
 	test_no_err (       curskey_meta_key('a'));
+	test_no_err (       curskey_meta_key('A'));
 	test_no_err (       curskey_meta_key(KEY_SPACE));
 	test_no_err (       curskey_meta_key(KEY_TAB));
 	test_no_err (       curskey_meta_key(KEY_RETURN));
 	test_no_err (       curskey_meta_key(KEY_DEL));
 	test_no_err (       curskey_meta_key(KEY_ESCAPE));
-} else {
-	test (ERR, curskey_meta_key('a'));
-}
 
 	// ========================================================================
 	// curskey_mod_key() - control + meta =====================================
 	// ========================================================================
-if (CURSKEY_CAN_META) {
-	test_no_err (curskey_mod_key('a', MOD_META|MOD_CNTRL));
+	test_no_err (curskey_mod_key('a',       MOD_META|MOD_CNTRL));
+	test_no_err (curskey_mod_key('A',       MOD_META|MOD_CNTRL));
+	test_no_err (curskey_mod_key('z',       MOD_META|MOD_CNTRL));
+	test_no_err (curskey_mod_key('Z',       MOD_META|MOD_CNTRL));
 	test (ERR, curskey_mod_key(-1,          MOD_META|MOD_CNTRL));
 	test (ERR, curskey_mod_key(0,           MOD_META|MOD_CNTRL));
 	test (ERR, curskey_mod_key(33,          MOD_META|MOD_CNTRL));
@@ -166,16 +166,12 @@ if (CURSKEY_CAN_META) {
 	test (ERR, curskey_mod_key(KEY_RETURN,  MOD_META|MOD_CNTRL));
 	test (ERR, curskey_mod_key(KEY_DEL,     MOD_META|MOD_CNTRL));
 	test (ERR, curskey_mod_key(KEY_ESCAPE,  MOD_META|MOD_CNTRL));
-} else {
-	test (ERR, curskey_mod_key('a', MOD_META|MOD_CNTRL));
-}
 
 	// ========================================================================
 	// curskey_parse() ========================================================
 	// ========================================================================
 
 	// invalid
-	//test (ERR, curskey_parse(NULL));
 	test (ERR, curskey_parse(""));
 
 	// simple character
@@ -273,10 +269,12 @@ if (CURSKEY_CAN_META) {
 #undef test
 #define test test_str
 	// curskey_keyname
+#if 0 // TODO
 	test("SPACE",       curskey_keyname(' '));
 	test("TAB",         curskey_keyname('\t'));
 	test("DEL",         curskey_keyname(127));
 	test("ESCAPE",      curskey_keyname(27));
+#endif
 
 	// ========================================================================
 	// curskey_get_keydef() ===================================================
@@ -303,7 +301,6 @@ if (CURSKEY_CAN_META) {
 	test("C-_",         curskey_get_keydef(31));
 
 	// meta characters
-if (CURSKEY_CAN_META) {
 	test("M-a",         curskey_get_keydef(curskey_meta_key('a')));
 	test("M-A",         curskey_get_keydef(curskey_meta_key('A')));
 	test("M-z",         curskey_get_keydef(curskey_meta_key('z')));
@@ -322,7 +319,6 @@ if (CURSKEY_CAN_META) {
 	test("C-M-]",       curskey_get_keydef(curskey_mod_key(']', MOD_CNTRL|MOD_META)));
 	test("C-M-^",       curskey_get_keydef(curskey_mod_key('^', MOD_CNTRL|MOD_META)));
 	test("C-M-_",       curskey_get_keydef(curskey_mod_key('_', MOD_CNTRL|MOD_META)));
-}
 
 	// special keynames
 	test("SPACE",       curskey_get_keydef(KEY_SPACE));
@@ -331,13 +327,11 @@ if (CURSKEY_CAN_META) {
 	test("RETURN",      curskey_get_keydef(KEY_RETURN));
 	test("ESCAPE",      curskey_get_keydef(KEY_ESCAPE));
 
-if (CURSKEY_CAN_META) {
 	test("M-SPACE",     curskey_get_keydef(curskey_meta_key(KEY_SPACE)));
 	test("M-DEL",       curskey_get_keydef(curskey_meta_key(KEY_DEL)));
 	test("M-TAB",       curskey_get_keydef(curskey_meta_key(KEY_TAB)));
 	test("M-RETURN",    curskey_get_keydef(curskey_meta_key(KEY_RETURN)));
 	test("M-ESCAPE",    curskey_get_keydef(curskey_meta_key(KEY_ESCAPE)));
-}
 
 	test("C-SPACE",     curskey_get_keydef(curskey_cntrl_key(KEY_SPACE)));
 	test(NULL,	        curskey_get_keydef(curskey_cntrl_key(KEY_DEL)));
@@ -346,9 +340,6 @@ if (CURSKEY_CAN_META) {
 	test(NULL,          curskey_get_keydef(curskey_cntrl_key(KEY_ESCAPE)));
 
 	test(NULL,          curskey_get_keydef(KEY_MAX * 2));
-	
-	printf("\n\tcurskey was %s to use meta keys.\n",
-		(CURSKEY_CAN_META ? "ABLE" : "UNABLE"));
 }
 
 void print_keys() {
@@ -386,8 +377,7 @@ int main(int argc, char *argv[])
 	for (int TRUE_FALSE = 0; TRUE_FALSE <= 1; ++TRUE_FALSE) {
 		initscr();
 		curskey_init();
-		if (TRUE_FALSE)
-			curskey_define_meta_keys(128);
+        curskey_define_meta_keys(128);
 		meta(stdscr, TRUE_FALSE);
 		endwin();
 		if (opt_dump)

@@ -4,8 +4,11 @@ build:
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -c curskey.c -o curskey.o
 
 test: build
-	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o curskey_test.c -o curskey_test
-	if which valgrind; then valgrind ./curskey_test; else ./curskey_test; fi
+	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o -o test.out test/curskey_test.c
+	if which valgrind; then valgrind ./test.out; else ./test.out; fi
+	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o -o test.out test/colors.c
+	if which valgrind; then valgrind ./test.out; else ./test.out; fi
+	rm -f test.out
 
 example: build
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o curskey_example.c -o curskey_example

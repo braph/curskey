@@ -131,7 +131,7 @@ const char* curskey_keyname(int keycode)
 	return NULL;
 }
 
-int curskey_keycode(const char *name)
+static int curskey_keycode(const char *name)
 	CURSES_LIB_NOEXCEPT
 {
 	int i;
@@ -222,7 +222,7 @@ int curskey_define_meta_keys()
 	int curs_keycode = CURSKEY_META_START;
 	char key_sequence[3] = "\e ";
 
-	for (ch = 0; ch <= CURSKEY_META_END_CHARACTERS; ++ch) {
+	for (ch = 0; ch <= CURSKEY_META_RANGE; ++ch) {
 		key_sequence[1] = ch;
 		define_key(key_sequence, curs_keycode);
 		++curs_keycode;
@@ -245,7 +245,7 @@ int curskey_mod_key(int key, unsigned int modifiers)
 	}
 
 	if (modifiers & CURSKEY_MOD_META) {
-		if (CURSKEY_META_START && (key >= 0 && key <= CURSKEY_META_END_CHARACTERS))
+		if (CURSKEY_META_START && (key >= 0 && key <= CURSKEY_META_RANGE))
 			key = CURSKEY_META_START + key;
 		else
 			return ERR;
@@ -267,7 +267,7 @@ int curskey_unmod_key(int key, unsigned int* modifiers)
 	if (key < 0)
 		return ERR;
 
-	if (key >= CURSKEY_META_START && key <= CURSKEY_META_START + CURSKEY_META_END_CHARACTERS)
+	if (key >= CURSKEY_META_START && key <= CURSKEY_META_START + CURSKEY_META_RANGE)
 	{
 		key = key - CURSKEY_META_START;
 		*modifiers |= CURSKEY_MOD_META;
@@ -355,8 +355,6 @@ int curskey_parse(const char *def)
 			mod |= CURSKEY_MOD_CNTRL;
 		}
 		else if (IS_META(def)) {
-			//if (! CURSKEY_CAN_META)
-			//	return ERR;
 			def += 2;
 			mod |= CURSKEY_MOD_ALT;
 		}
@@ -486,24 +484,24 @@ const char* curses_attr_tostring(unsigned int attribute)
  * ==========================================================================*/
 
 static int last_id = 0;
-static struct color_pair {
-	short fg;
-	short bg;
-} color_pairs[CURSES_LIB_COLORS];
+static int color_pairs[CURSES_LIB_COLORS];
+
+#define FG_BG(FG, BG) \
+	(STATIC_CAST(unsigned short, FG) | STATIC_CAST(unsigned short, BG) << 16)
 
 int curses_create_color_pair(short fg, short bg)
 	CURSES_LIB_NOEXCEPT
 {
 	int pair_id;
+	int pair = FG_BG(fg, bg);
 	for (pair_id = 1; pair_id <= last_id; ++pair_id)
-		if (color_pairs[pair_id].fg == fg && color_pairs[pair_id].bg == bg)
+		if (color_pairs[pair_id] == pair)
 			return pair_id;
 
 	if (last_id == CURSES_LIB_COLORS)
-		return 0;
+		return ERR;
 
-	color_pairs[pair_id].fg = fg;
-	color_pairs[pair_id].bg = bg;
+	color_pairs[pair_id] = pair;
 	init_pair(pair_id, fg, bg);
 	return ++last_id;
 }
