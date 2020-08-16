@@ -36,6 +36,10 @@
 #endif
 
 #define UPPER(C) (C & ~0x20)
+static void define_xterm_keys();
+static void define_rxvt_arrow(char, int);
+static void define_rxvt_key(char, int);
+static void define_rxvt_func_keys();
 
 struct curskey_key {
 	char *keyname;
@@ -214,25 +218,6 @@ ERROR:
 	return ERR;
 }
 
-int curskey_define_meta_keys()
-	CURSES_LIB_NOEXCEPT
-{
-#ifdef NCURSES_VERSION
-	int ch;
-	int curs_keycode = CURSKEY_META_START;
-	char key_sequence[3] = "\e ";
-
-	for (ch = 0; ch <= CURSKEY_META_RANGE; ++ch) {
-		key_sequence[1] = ch;
-		define_key(key_sequence, curs_keycode);
-		++curs_keycode;
-	}
-
-	return OK;
-#endif
-	return ERR;
-}
-
 #if 0
 int curskey_mod_key(int key, unsigned int modifiers)
 	CURSES_LIB_NOEXCEPT
@@ -262,7 +247,8 @@ int curskey_unmod_key(int key, unsigned int* modifiers)
 	if (!modifiers)
 		modifiers = &null_store;
 
-	*modifiers = 0;
+	*modifiers = key & (CURSKEY_MOD_SHIFT| CURSKEY_MOD_ALT|CURSKEY_MOD_CNTRL);
+	key &= ~(CURSKEY_MOD_SHIFT|CURSKEY_MOD_ALT|CURSKEY_MOD_CNTRL);
 
 	if (key < 0)
 		return ERR;
@@ -274,8 +260,7 @@ int curskey_unmod_key(int key, unsigned int* modifiers)
 	}
 
 	if (key < ' ' &&
-		// We do not want C-I for TAB, etc...
-		key != KEY_ESCAPE &&
+		key != KEY_ESCAPE && // We do not want C-I for TAB, etc...
 		key != KEY_TAB &&
 		key != KEY_RETURN) {
 		if (key == 0)
@@ -292,27 +277,12 @@ const char *curskey_get_keydef(int keycode)
 	CURSES_LIB_NOEXCEPT
 {
 	unsigned int mod;
-	char *s = buffer;
-
 	keycode = curskey_unmod_key(keycode, &mod);
 
-	/*
-	if (keycode == ERR)
-		return NULL;
-
-	if (keycode >= KEY_MIN && keycode <= KEY_MAX)
-		return curskey_keyname(keycode);
-	*/
-
-	if (mod & CURSKEY_MOD_CNTRL) {
-		*s++ = 'C';
-		*s++ = '-';
-	}
-
-	if (mod & CURSKEY_MOD_META) {
-		*s++ = 'M';
-		*s++ = '-';
-	}
+	char *s = buffer;
+	if (mod & CURSKEY_MOD_CNTRL) { *s++ = 'C'; *s++ = '-'; }
+	if (mod & CURSKEY_MOD_META)  { *s++ = 'M'; *s++ = '-'; }
+	if (mod & CURSKEY_MOD_SHIFT) { *s++ = 'S'; *s++ = '-'; }
 
 	const char* name = curskey_keyname(keycode);
 	if (name)
@@ -358,6 +328,10 @@ int curskey_parse(const char *def)
 			def += 2;
 			mod |= CURSKEY_MOD_ALT;
 		}
+		else if (IS_SHIFT(def)) {
+			def += 2;
+			mod |= CURSKEY_MOD_SHIFT;
+		}
 		else
 			break;
 	}
@@ -376,6 +350,25 @@ int curskey_init()
 	CURSES_LIB_NOEXCEPT
 {
 	keypad(stdscr, TRUE);
+
+	define_xterm_keys();
+
+	define_rxvt_arrow('A', KEY_UP);
+	define_rxvt_arrow('B', KEY_DOWN);
+	define_rxvt_arrow('C', KEY_RIGHT);
+	define_rxvt_arrow('D', KEY_LEFT);
+
+	define_rxvt_key('2', KEY_IC);
+	define_rxvt_key('3', KEY_DC);
+	define_rxvt_key('5', KEY_PPAGE);
+	define_rxvt_key('6', KEY_NPAGE);
+	define_rxvt_key('7', KEY_HOME);
+	define_rxvt_key('8', KEY_END);
+
+	define_rxvt_func_keys();
+
+	curskey_define_meta_keys();
+
 	return create_ncurses_keynames();
 }
 
@@ -510,4 +503,156 @@ void curses_reset_color_pairs()
 	CURSES_LIB_NOEXCEPT
 {
 	last_id = 0;
+}
+
+/* ============================================================================
+ * Key defining functions =====================================================
+ * ==========================================================================*/
+
+static inline void define_modifier_combinations(char* definition, int keysym, int modifier_pos) {
+	for (int mod = 1; mod <= 7; ++mod) {
+		definition[modifier_pos] = '1' + mod;
+		define_key(definition, keysym
+				| (mod & 1 ? CURSKEY_MOD_SHIFT : 0)
+				| (mod & 2 ? CURSKEY_MOD_ALT   : 0)
+				| (mod & 4 ? CURSKEY_MOD_CNTRL : 0)
+		);
+	}
+}
+
+static inline void define_xterm_keys() {
+	const struct {
+		char seq[6]; // '\1' marks placeholder for modifier
+		short key;
+	} codes[] = {
+		{ "[6;\1~", KEY_NPAGE },
+		{ "[5;\1~", KEY_PPAGE },
+		{ "[4;\1~", KEY_END   },
+		{ "[3;\1~", KEY_DC    },
+		{ "[2;\1~", KEY_IC    },
+		{ "[1;\1~", KEY_HOME  },
+
+		{ "[1;\1A", KEY_UP    },
+		{ "[1;\1B", KEY_DOWN  },
+		{ "[1;\1C", KEY_RIGHT },
+		{ "[1;\1D", KEY_LEFT  },
+
+		{ "[1;\1E", KEY_B2    }, /// not quite sure
+		{ "[1;\1F", KEY_END   },
+		{ "[1;\1H", KEY_HOME  },
+
+		{ "[1;\1P", KEY_F(1)  },
+		{ "[1;\1Q", KEY_F(2)  },
+		{ "[1;\1R", KEY_F(3)  },
+		{ "[1;\1S", KEY_F(4)  },
+
+		{{'[','1','5',';','\1','~'}, KEY_F(5)  },
+		{{'[','1','7',';','\1','~'}, KEY_F(6)  },
+		{{'[','1','8',';','\1','~'}, KEY_F(7)  },
+		{{'[','1','9',';','\1','~'}, KEY_F(8)  },
+
+		{{'[','2','0',';','\1','~'}, KEY_F(9)  },
+		{{'[','2','1',';','\1','~'}, KEY_F(10) },
+		{{'[','2','3',';','\1','~'}, KEY_F(11) },
+		{{'[','2','4',';','\1','~'}, KEY_F(12) },
+
+		// KDE's Konsole
+		{ "O\1P",   KEY_F(1)  },
+		{ "O\1Q",   KEY_F(2)  },
+		{ "O\1R",   KEY_F(3)  },
+		{ "O\1S",   KEY_F(4)  },
+	};
+
+	for (int i = sizeof(codes)/sizeof(*codes); i--;) {
+		char def[8] = {'\033', 0, 0, 0, 0, 0, 0, 0};
+		memcpy(def+1, codes[i].seq, 6);
+		int modifier_pos = (def[2] == '\1' ? 2 : (def[4] == '\1' ? 4 : 5));
+		define_modifier_combinations(def, codes[i].key, modifier_pos);
+	}
+}
+
+static void define_rxvt_arrow(char c, int key) {
+	char def[] = "\033\033[ ";
+
+	def[3] = c;
+	define_key(def,     key | CURSKEY_MOD_ALT);         // \033\033[A
+
+	def[3] = c | 0x20;
+	define_key(def + 1, key | CURSKEY_MOD_SHIFT);       //     \033[a
+	define_key(def,     key | CURSKEY_MOD_SHIFT | CURSKEY_MOD_ALT); // \033\033[a
+
+	def[2] = 'O';
+	define_key(def + 1, key | CURSKEY_MOD_CNTRL);       //     \033Oa
+	define_key(def,     key | CURSKEY_MOD_CNTRL | CURSKEY_MOD_ALT); // \033\033Oa
+}
+
+static void define_rxvt_key(char c, int key) {
+	char def[] = "\033\033[ ~";
+
+	def[3] = c;
+	define_key(def,    key | CURSKEY_MOD_ALT);
+
+	def[4] = '$';
+	define_key(def+1,  key | CURSKEY_MOD_SHIFT);
+	define_key(def,    key | CURSKEY_MOD_SHIFT | CURSKEY_MOD_ALT);
+
+	def[4] = '^';
+	define_key(def+1,  key | CURSKEY_MOD_CNTRL);
+	define_key(def,    key | CURSKEY_MOD_CNTRL | CURSKEY_MOD_ALT);
+
+	def[4] = '@';
+	define_key(def+1,  key | CURSKEY_MOD_CNTRL | CURSKEY_MOD_SHIFT);
+	define_key(def,    key | CURSKEY_MOD_CNTRL | CURSKEY_MOD_SHIFT | CURSKEY_MOD_ALT);
+}
+
+void define_rxvt_func_keys() {
+	char normal[]      = "11~" "12~" "13~" "14~" "15~" "17~" "18~" "19~" "20~" "21~" "23~" "24~";
+	char shift[]       = "23~" "24~" "25~" "26~" "28~" "29~" "31~" "32~" "33~" "34~" "23$" "24$";
+	char shift_cntrl[] = "23^" "24^" "25^" "26^" "28^" "29^" "31^" "32^" "33^" "34^" "23@" "24@";
+	char def[] = "\033\033[   ";
+
+	for (int i = 0; i < 12; ++i) {
+		int key = KEY_F(i+1);
+
+		def[3] = normal[i*3+0];
+		def[4] = normal[i*3+1];
+		def[5] = normal[i*3+2];
+		define_key(def+1, key);
+		define_key(def,   key | CURSKEY_MOD_ALT);
+
+		def[5] = '^';
+		define_key(def+1, key | CURSKEY_MOD_CNTRL);
+		define_key(def,   key | CURSKEY_MOD_CNTRL | CURSKEY_MOD_ALT);
+
+		def[3] = shift[i*3+0];
+		def[4] = shift[i*3+1];
+		def[5] = shift[i*3+2];
+		define_key(def+1, key | CURSKEY_MOD_SHIFT);
+		define_key(def,   key | CURSKEY_MOD_SHIFT | CURSKEY_MOD_ALT);
+
+		def[3] = shift_cntrl[i*3+0];
+		def[4] = shift_cntrl[i*3+1];
+		def[5] = shift_cntrl[i*3+2];
+		define_key(def+1, key | CURSKEY_MOD_SHIFT | CURSKEY_MOD_CNTRL );
+		define_key(def,   key | CURSKEY_MOD_SHIFT | CURSKEY_MOD_CNTRL | CURSKEY_MOD_ALT);
+	}
+}
+
+int curskey_define_meta_keys()
+	CURSES_LIB_NOEXCEPT
+{
+#ifdef NCURSES_VERSION
+	int ch;
+	int curs_keycode = CURSKEY_META_START;
+	char key_sequence[3] = "\e ";
+
+	for (ch = 0; ch <= CURSKEY_META_RANGE; ++ch) {
+		key_sequence[1] = ch;
+		define_key(key_sequence, curs_keycode);
+		++curs_keycode;
+	}
+
+	return OK;
+#endif
+	return ERR;
 }

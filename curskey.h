@@ -32,6 +32,7 @@
  *	 - Curses special keys (HOME, END, LEFT, F1, ...)
  *	 - Bindings with control-key (C-x, ^x)
  *	 - Bindings with meta/alt-key (M-x, A-x)
+ *	 - Bindings with shift key
  *
  * Usage:
  * \code{.c}
@@ -78,9 +79,10 @@
 
 /// \defgroup MODIFIER Modifiers
 /// @{
-#define CURSKEY_MOD_CNTRL   1U
-#define CURSKEY_MOD_META    2U
-#define CURSKEY_MOD_ALT     2U
+#define CURSKEY_MOD_SHIFT   (1 << 9)
+#define CURSKEY_MOD_META    (1 << 10)
+#define CURSKEY_MOD_ALT     (1 << 10)
+#define CURSKEY_MOD_CNTRL   (1 << 11)
 /// @}
 
 /// Holds the character that should be interpreted as **RETURN**.
@@ -118,39 +120,43 @@ void curskey_destroy() CURSES_LIB_NOEXCEPT;
  * Available modifiers are:
  * 	- **CURSKEY_MOD_META** / **CURSKEY_MOD_ALT**
  * 	- **CURSKEY_MOD_CNTRL**
+ * 	- **CURSKEY_MOD_SHIFT**
  *
  * See also the macros curskey_meta_key(), curskey_cntrl_key().
  *
  * @note   This is implemented as a macro since since it shall be usable
- *         as a constant expression
+ *         as a constant expression (for example in switch-case).
  *
  * @return Keycode or **ERR** if the modifiers cannot be applied to this key.
  */
-#define curskey_mod_key(KEY, MODIFIERS) \
+#define curskey_mod_key(KEY, MOD)                                             \
 (                                                                             \
-	((MODIFIERS) == 0) ? (                                                    \
-		KEY                                                                   \
+	((MOD) & ~(CURSKEY_MOD_CNTRL|CURSKEY_MOD_ALT|CURSKEY_MOD_SHIFT)) ? (      \
+		ERR /* Invalid modifier */                                            \
 	)                                                                         \
-	:((MODIFIERS) == CURSKEY_MOD_CNTRL) ? (                                   \
-		((KEY >= 'A' && KEY <= '_') || (KEY >= 'a' && KEY <= 'z') || KEY == ' ') ? ( \
-			KEY % 32                                                          \
-		) : (                                                                 \
-			ERR                                                               \
-		)                                                                     \
+	:(((KEY) >= 'a' && (KEY) <= 'z') || ((KEY) >= 'A' && (KEY) <= 'Z')) ? (   \
+		(((KEY)                                                               \
+			& (((MOD) & CURSKEY_MOD_SHIFT) ? ~0x20 : 0xFF))                   \
+			% (((MOD) & CURSKEY_MOD_CNTRL) ? 32    : 0xFF))                   \
+			+ (((MOD) & CURSKEY_MOD_META)  ? CURSKEY_META_START : 0)          \
 	)                                                                         \
-	:((MODIFIERS) == CURSKEY_MOD_META) ? (                                    \
-		(KEY >= 0 && KEY <= CURSKEY_META_RANGE) ? (                           \
-			KEY + CURSKEY_META_START                                          \
-		) : (                                                                 \
-			ERR                                                               \
+	:(((KEY) >= '[' && ((KEY) <= '_')) || (KEY) == ' ') ? (                   \
+		((MOD) & CURSKEY_MOD_SHIFT) ? (                                       \
+			ERR /* Shift not allowed here */                                  \
 		)                                                                     \
+		: ((KEY)                                                              \
+			% (((MOD) & CURSKEY_MOD_CNTRL) ? 32 : 0xFF))                      \
+			+ (((MOD) & CURSKEY_MOD_META)  ? CURSKEY_META_START : 0)          \
 	)                                                                         \
-	:((MODIFIERS) == (CURSKEY_MOD_CNTRL|CURSKEY_MOD_META)) ? (                \
-		((KEY >= 'A' && KEY <= '_') || (KEY >= 'a' && KEY <= 'z') || KEY == ' ') ? ( \
-			KEY % 32 + CURSKEY_META_START                                     \
-		) : (                                                                 \
-			ERR                                                               \
+	:((KEY) >= 0 && (KEY) <= CURSKEY_META_RANGE) ? (                          \
+		((MOD) & (CURSKEY_MOD_SHIFT|CURSKEY_MOD_CNTRL)) ? (                   \
+			ERR /* Shift / Control not allowed here */                        \
 		)                                                                     \
+		: (KEY)                                                               \
+			+ (((MOD) & CURSKEY_MOD_META)  ? CURSKEY_META_START : 0)          \
+	)                                                                         \
+	:((KEY) >= KEY_MIN && (KEY) <= KEY_MAX) ? (                               \
+		(KEY) | (signed) (MOD) /*TODO cast*/                                  \
 	)                                                                         \
 	:(                                                                        \
 		ERR                                                                   \
@@ -200,7 +206,7 @@ int curskey_parse(const char *keydef) CURSES_LIB_NOEXCEPT;
  *
  * @note This function is not thread-safe.
  *
- * @return The key definition or \b NULL on error
+ * @return The key definition or **NULL** on error
  */
 const char* curskey_get_keydef(int keycode) CURSES_LIB_NOEXCEPT;
 

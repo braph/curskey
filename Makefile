@@ -6,9 +6,14 @@ build:
 test: build
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o -o test.out test/curskey_test.c
 	if which valgrind; then valgrind ./test.out; else ./test.out; fi
+	
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o -o test.out test/colors.c
 	if which valgrind; then valgrind ./test.out; else ./test.out; fi
+	
 	rm -f test.out
+
+test/get_key: test/get_key.c
+	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o test/get_key.c -o test/get_key
 
 example: build
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses curskey.o curskey_example.c -o curskey_example
