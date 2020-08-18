@@ -11,8 +11,6 @@ int main() {
 	noecho();
 
 	if (curskey_init() == OK) {
-    curskey_define_meta_keys();
-
     assert(MOD_KEY('r', CNTRL|ALT) == curskey_parse("C-M-r"));
 
 		for (int key; (key = getch()) != -1;) {

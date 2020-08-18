@@ -69,7 +69,6 @@
 /// @{
 #define KEY_SPACE      ' '
 #define KEY_TAB        '\t'
-#define KEY_DEL        127
 #define KEY_ESCAPE     27
 #define KEY_INSERT     KEY_IC
 #define KEY_DELETE     KEY_DC
@@ -111,6 +110,11 @@ int curskey_init() CURSES_LIB_NOEXCEPT;
 
 /**
  * @brief Destroy curskey.
+ *
+ * This function can be called as soon as the functions
+ *   - **curskey_get_keydef** and
+ *   - **curskey_parse**
+ * will no longer be in use.
  */
 void curskey_destroy() CURSES_LIB_NOEXCEPT;
 
@@ -121,8 +125,6 @@ void curskey_destroy() CURSES_LIB_NOEXCEPT;
  * 	- **CURSKEY_MOD_META** / **CURSKEY_MOD_ALT**
  * 	- **CURSKEY_MOD_CNTRL**
  * 	- **CURSKEY_MOD_SHIFT**
- *
- * See also the macros curskey_meta_key(), curskey_cntrl_key().
  *
  * @note   This is implemented as a macro since since it shall be usable
  *         as a constant expression (for example in switch-case).
@@ -172,12 +174,6 @@ void curskey_destroy() CURSES_LIB_NOEXCEPT;
  */
 int curskey_unmod_key(int key, unsigned int *modifiers) CURSES_LIB_NOEXCEPT;
 
-#define curskey_meta_key(KEY) \
-	curskey_mod_key(KEY, CURSKEY_MOD_META)
-
-#define curskey_cntrl_key(KEY) \
-	curskey_mod_key(KEY, CURSKEY_MOD_CNTRL)
-
 /**
  * @brief Return the curses keycode for a key definition.
  *
@@ -215,27 +211,7 @@ const char* curskey_get_keydef(int keycode) CURSES_LIB_NOEXCEPT;
  *
  * @return **OK** if meta keys are available, **ERR** otherwise.
  */
-int curskey_define_meta_keys() CURSES_LIB_NOEXCEPT;
-
-/* Helper functions */
-
-/**
- * @brief Translate the name of a curses KEY_ constant to its value.
- * 	"KEY_DOWN" -> 258
- *
- * @return Keycode or **ERR** on failure.
- */
-//int curskey_keycode(const char *keyname) CURSES_LIB_NOEXCEPT;
-
-/**
- * @brief Like curses keyname(), translates the value of a KEY_ constant to its name,
- * but strips leading "KEY_" and parentheses ("KEY_F(...)") off.
- *
- * @note This function is not thread-safe.
- *
- * @return The name of the key or **NULL** on failure.
- */
-//const char* curskey_keyname(int keycode) CURSES_LIB_NOEXCEPT;
+//int curskey_define_meta_keys() CURSES_LIB_NOEXCEPT; TODO
 
 /* ============================================================================
  * Color functions ============================================================

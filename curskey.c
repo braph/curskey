@@ -35,11 +35,12 @@
 #define REALLOC(TYPE, PTR, SIZE)      realloc(PTR, SIZE)
 #endif
 
-#define UPPER(C) (C & ~0x20)
-static void define_xterm_keys();
-static void define_rxvt_arrow(char, int);
-static void define_rxvt_key(char, int);
-static void define_rxvt_func_keys();
+#define UPPER(CHAR) (CHAR & ~0x20)
+static void define_xterm_keys()          CURSES_LIB_NOEXCEPT;
+static void define_rxvt_arrow(char, int) CURSES_LIB_NOEXCEPT;
+static void define_rxvt_key(char, int)   CURSES_LIB_NOEXCEPT;
+static void define_rxvt_func_keys()      CURSES_LIB_NOEXCEPT;
+static void define_meta_keys()           CURSES_LIB_NOEXCEPT;
 
 struct curskey_key {
 	char *keyname;
@@ -50,20 +51,19 @@ int KEY_RETURN = '\n';
 static int curskey_keynames_size = 0;
 static struct curskey_key *curskey_keynames = NULL;
 
-// Names for non-printable/whitespace characters
-// and aliases for existing keys
+// This provides keynames for non-printable/whitespace characters.
+// It also provides aliased named for existing key symbols.
 static const struct curskey_key curskey_aliases[] = {
 	// Keep this sorted by `keyname`
-	{ CONST_CAST(char*, "DEL"),      KEY_DEL    },
-	{ CONST_CAST(char*, "DELETE"),   KEY_DC     },
-	{ CONST_CAST(char*, "ESCAPE"),   KEY_ESCAPE },
-	{ CONST_CAST(char*, "INSERT"),   KEY_IC     },
-	{ CONST_CAST(char*, "PAGEDOWN"), KEY_NPAGE  },
-	{ CONST_CAST(char*, "PAGEUP"),   KEY_PPAGE  },
-	{ CONST_CAST(char*, "SPACE"),    KEY_SPACE  },
-	{ CONST_CAST(char*, "TAB"),      KEY_TAB    }
+	{ CONST_CAST(char*, "DELETE"),    KEY_DC     },
+	{ CONST_CAST(char*, "ESCAPE"),    KEY_ESCAPE },
+	{ CONST_CAST(char*, "INSERT"),    KEY_IC     },
+	{ CONST_CAST(char*, "PAGEDOWN"),  KEY_NPAGE  },
+	{ CONST_CAST(char*, "PAGEUP"),    KEY_PPAGE  },
+	{ CONST_CAST(char*, "SPACE"),     KEY_SPACE  },
+	{ CONST_CAST(char*, "TAB"),       KEY_TAB    }
 };
-#define ALIASES_SIZE  STATIC_CAST(int, sizeof(curskey_aliases) / sizeof(curskey_aliases[0]))
+#define ALIASES_SIZE  STATIC_CAST(int, sizeof(curskey_aliases) / sizeof(*curskey_aliases))
 
 // Buffer that is used by the functions
 static char buffer[256];
@@ -74,17 +74,21 @@ static char buffer[256];
 	(UPPER(name[2]) == 'Y') && \
 	(name[3] == '_'))
 
-static int curskey_key_cmp(const void *a, const void *b) {
+static int curskey_key_cmp(const void *a, const void *b)
+	CURSES_LIB_NOEXCEPT
+{
 	return strcmp(
 		STATIC_CAST(const struct curskey_key*, a)->keyname,
 		STATIC_CAST(const struct curskey_key*, b)->keyname);
 }
 
-static int curskey_find(const struct curskey_key *table, int size, const char *name) {
+static int curskey_find(const struct curskey_key *table, int size, const char *name)
+	CURSES_LIB_NOEXCEPT
+{
 	int start = 0;
 	int end = size;
 	int i;
-	int cmp;
+	int cmp; // TODO move this cmp?
 
 	while (1) {
 		i = (start+end) / 2;
@@ -101,6 +105,9 @@ static int curskey_find(const struct curskey_key *table, int size, const char *n
 	}
 }
 
+/// Like the original keyname() function.
+/// Translates the value of a KEY_ constant to its name,
+/// but strips leading "KEY_" and parentheses ("KEY_F(...)") off.
 const char* curskey_keyname(int keycode)
 	CURSES_LIB_NOEXCEPT
 {
@@ -124,6 +131,9 @@ const char* curskey_keyname(int keycode)
 	if (keycode == KEY_RETURN)
 		return "RETURN";
 
+	if (keycode == 127)
+		return "BACKSPACE";
+
 	for (i = 0; i < ALIASES_SIZE; ++i)
 		if (keycode == curskey_aliases[i].keycode)
 			return curskey_aliases[i].keyname;
@@ -135,6 +145,7 @@ const char* curskey_keyname(int keycode)
 	return NULL;
 }
 
+/// Translate the name of a curses KEY_ constant to its value.
 static int curskey_keycode(const char *name)
 	CURSES_LIB_NOEXCEPT
 {
@@ -143,16 +154,6 @@ static int curskey_keycode(const char *name)
 	if (STARTSWITH_KEY(name))
 		name += 4;
 
-	if (UPPER(name[0]) == 'F') {
-		i = (name[1] == '(' ? 2 : 1);
-
-		if (name[i] >= '0' && name[i] <= '9') {
-			i = strtoimax(name + i, NULL, 10);
-			if (i >= 1 && i <= 63)
-				return KEY_F(i);
-		}
-	}
-
 	if (! strcasecmp(name, "RETURN"))
 		return KEY_RETURN;
 
@@ -160,10 +161,26 @@ static int curskey_keycode(const char *name)
 	if (i != ERR)
 		return i;
 
-	return curskey_find(curskey_keynames, curskey_keynames_size, name);
+	i = curskey_find(curskey_keynames, curskey_keynames_size, name);
+	if (i != ERR)
+		return i;
+
+	if (UPPER(name[0]) == 'F') {
+		name += (name[1] == '(' ? 2 : 1);
+
+		if (name[0] >= '0' && name[0] <= '9') {
+			i = strtoimax(name, NULL, 10);
+			if (i >= 1 && i <= 63)
+				return KEY_F(i);
+		}
+	}
+
+	return ERR;
 }
 
-static void free_ncurses_keynames() {
+static void free_ncurses_keynames()
+	CURSES_LIB_NOEXCEPT
+{
 	if (curskey_keynames) {
 		while (curskey_keynames_size)
 			free(curskey_keynames[--curskey_keynames_size].keyname);
@@ -176,7 +193,7 @@ static void free_ncurses_keynames() {
  * Create the list of ncurses KEY_ constants.
  * Returns OK on success, ERR on failure.
  */
-static int create_ncurses_keynames() {
+int create_ncurses_keynames() {
 	char *name;
 	void *tmp;
 
@@ -351,6 +368,9 @@ int curskey_init()
 {
 	keypad(stdscr, TRUE);
 
+	//define_key("\x57", KEY_BACKSPACE); // 127 TODO ...
+
+	define_meta_keys();
 	define_xterm_keys();
 
 	define_rxvt_arrow('A', KEY_UP);
@@ -366,8 +386,6 @@ int curskey_init()
 	define_rxvt_key('8', KEY_END);
 
 	define_rxvt_func_keys();
-
-	curskey_define_meta_keys();
 
 	return create_ncurses_keynames();
 }
@@ -509,7 +527,10 @@ void curses_reset_color_pairs()
  * Key defining functions =====================================================
  * ==========================================================================*/
 
-static inline void define_modifier_combinations(char* definition, int keysym, int modifier_pos) {
+#ifdef NCURSES_VERSION
+static inline void define_modifier_combinations(char* definition, int keysym, int modifier_pos)
+	CURSES_LIB_NOEXCEPT
+{
 	for (int mod = 1; mod <= 7; ++mod) {
 		definition[modifier_pos] = '1' + mod;
 		define_key(definition, keysym
@@ -520,7 +541,9 @@ static inline void define_modifier_combinations(char* definition, int keysym, in
 	}
 }
 
-static inline void define_xterm_keys() {
+static inline void define_xterm_keys()
+	CURSES_LIB_NOEXCEPT
+{
 	const struct {
 		char seq[6]; // '\1' marks placeholder for modifier
 		short key;
@@ -571,7 +594,9 @@ static inline void define_xterm_keys() {
 	}
 }
 
-static void define_rxvt_arrow(char c, int key) {
+static void define_rxvt_arrow(char c, int key)
+	CURSES_LIB_NOEXCEPT
+{
 	char def[] = "\033\033[ ";
 
 	def[3] = c;
@@ -586,7 +611,9 @@ static void define_rxvt_arrow(char c, int key) {
 	define_key(def,     key | CURSKEY_MOD_CNTRL | CURSKEY_MOD_ALT); // \033\033Oa
 }
 
-static void define_rxvt_key(char c, int key) {
+static void define_rxvt_key(char c, int key)
+	CURSES_LIB_NOEXCEPT
+{
 	char def[] = "\033\033[ ~";
 
 	def[3] = c;
@@ -605,10 +632,12 @@ static void define_rxvt_key(char c, int key) {
 	define_key(def,    key | CURSKEY_MOD_CNTRL | CURSKEY_MOD_SHIFT | CURSKEY_MOD_ALT);
 }
 
-void define_rxvt_func_keys() {
-	char normal[]      = "11~" "12~" "13~" "14~" "15~" "17~" "18~" "19~" "20~" "21~" "23~" "24~";
-	char shift[]       = "23~" "24~" "25~" "26~" "28~" "29~" "31~" "32~" "33~" "34~" "23$" "24$";
-	char shift_cntrl[] = "23^" "24^" "25^" "26^" "28^" "29^" "31^" "32^" "33^" "34^" "23@" "24@";
+void define_rxvt_func_keys()
+	CURSES_LIB_NOEXCEPT
+{
+	char normal[]      = "11~12~13~14~15~17~18~19~20~21~23~24~";
+	char shift[]       = "23~24~25~26~28~29~31~32~33~34~23$24$";
+	char shift_cntrl[] = "23^24^25^26^28^29^31^32^33^34^23@24@";
 	char def[] = "\033\033[   ";
 
 	for (int i = 0; i < 12; ++i) {
@@ -638,10 +667,9 @@ void define_rxvt_func_keys() {
 	}
 }
 
-int curskey_define_meta_keys()
+void define_meta_keys()
 	CURSES_LIB_NOEXCEPT
 {
-#ifdef NCURSES_VERSION
 	int ch;
 	int curs_keycode = CURSKEY_META_START;
 	char key_sequence[3] = "\e ";
@@ -651,8 +679,5 @@ int curskey_define_meta_keys()
 		define_key(key_sequence, curs_keycode);
 		++curs_keycode;
 	}
-
-	return OK;
-#endif
-	return ERR;
 }
+#endif
