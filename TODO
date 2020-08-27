@@ -1,2 +1,4 @@
 CURSKEY_META_END_CHARACTERS 128 -> 127 + check return code of define_key
 define_key(127, KEY_BACKSPACE)
+terminology: A-F1-F4
+CNTRL -> CTRL

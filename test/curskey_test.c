@@ -324,27 +324,15 @@ int main(int argc, char *argv[])
 		else
 			return usage(argv[0]);
 
-	for (int TRUE_FALSE = 0; TRUE_FALSE <= 1; ++TRUE_FALSE) {
-		initscr();
-		curskey_init();
-		meta(stdscr, TRUE_FALSE);
-		endwin();
-		if (opt_dump)
-			print_keys();
-		do_tests();
-		printf("\tcurskey has been tested with `meta(stdscr, %s)`\n\n",
-				(TRUE_FALSE ? "ON" : "OFF"));
-		curskey_destroy();
-	}
-
-	initscr();
-	curskey_init();
-	//initscr();
-	noecho();
-	//cbreak();
-	//nonl();
+    initscr();
+    curskey_init();
+    endwin();
+    if (opt_dump)
+        print_keys();
+    do_tests();
 
 	if (opt_interactive) {
+		noecho();
 		addstr("Interactive test\n");
 
 		for (int ch = getch() ; ch != -1 ; ch = getch()) {

@@ -207,11 +207,16 @@ int curskey_parse(const char *keydef) CURSES_LIB_NOEXCEPT;
 const char* curskey_get_keydef(int keycode) CURSES_LIB_NOEXCEPT;
 
 /**
- * @brief Defines meta escape sequences in curses.
+ * @brief Replacement for wgetch
  *
- * @return **OK** if meta keys are available, **ERR** otherwise.
+ * @note  This changes the timeout of the window using **wtimeout()**
  */
-//int curskey_define_meta_keys() CURSES_LIB_NOEXCEPT; TODO
+int curskey_wgetch(WINDOW*) CURSES_LIB_NOEXCEPT;
+
+/**
+ * @see curskey_wgetch()
+ */
+#define curskey_getch() curskey_wgetch(stdscr)
 
 /* ============================================================================
  * Color functions ============================================================

@@ -1,5 +1,6 @@
 #include "curskey.h"
 #include <assert.h>
+#include <stdlib.h> // setenv
 
 #define CNTRL   CURSKEY_MOD_CNTRL
 #define ALT     CURSKEY_MOD_META
@@ -7,13 +8,15 @@
 #define MOD_KEY curskey_mod_key
 
 int main() {
+	setenv("ESCDELAY", "1", 0);
+
 	initscr(); // Has to be called!
 	noecho();
 
 	if (curskey_init() == OK) {
     assert(MOD_KEY('r', CNTRL|ALT) == curskey_parse("C-M-r"));
 
-		for (int key; (key = getch()) != -1;) {
+		for (int key; (key = curskey_getch()) != -1;) {
       clear();
       switch (key) {
         case ERR:                     addstr("ERR");            break;
