@@ -1,3 +1,14 @@
+#ifdef __cplusplus
+#define CONST_CAST(TYPE, VALUE)       const_cast<TYPE>(VALUE)
+#define REINTERPRET_CAST(TYPE, VALUE) reinterpret_cast<TYPE>(VALUE)
+#define MALLOC(TYPE, SIZE)            STATIC_CAST(TYPE, malloc(SIZE))
+#define REALLOC(TYPE, PTR, SIZE)      STATIC_CAST(TYPE, realloc(PTR, SIZE))
+#else
+#define CONST_CAST(TYPE, VALUE)       ((TYPE)(VALUE))
+#define REINTERPRET_CAST(TYPE, VALUE) ((TYPE)(VALUE))
+#define MALLOC(TYPE, SIZE)            malloc(SIZE)
+#define REALLOC(TYPE, PTR, SIZE)      realloc(PTR, SIZE)
+#endif
 
 void define_meta_keys()
 	CURSES_LIB_NOEXCEPT

@@ -22,17 +22,9 @@
 #include <inttypes.h>
 
 #ifdef __cplusplus
-#define CONST_CAST(TYPE, VALUE)       const_cast<TYPE>(VALUE)
 #define STATIC_CAST(TYPE, VALUE)      static_cast<TYPE>(VALUE)
-#define REINTERPRET_CAST(TYPE, VALUE) reinterpret_cast<TYPE>(VALUE)
-#define MALLOC(TYPE, SIZE)            STATIC_CAST(TYPE, malloc(SIZE))
-#define REALLOC(TYPE, PTR, SIZE)      STATIC_CAST(TYPE, realloc(PTR, SIZE))
 #else
-#define CONST_CAST(TYPE, VALUE)       ((TYPE)(VALUE))
 #define STATIC_CAST(TYPE, VALUE)      ((TYPE)(VALUE))
-#define REINTERPRET_CAST(TYPE, VALUE) ((TYPE)(VALUE))
-#define MALLOC(TYPE, SIZE)            malloc(SIZE)
-#define REALLOC(TYPE, PTR, SIZE)      realloc(PTR, SIZE)
 #endif
 
 #define UPPER(CHAR) (CHAR & ~0x20)
@@ -42,7 +34,7 @@ static void define_rxvt_key(char, int)   CURSES_LIB_NOEXCEPT;
 static void define_rxvt_func_keys()      CURSES_LIB_NOEXCEPT;
 
 struct curskey_key {
-	char *keyname;
+	const char *keyname;
 	int keycode;
 };
 
@@ -52,19 +44,19 @@ int KEY_RETURN = '\n';
 // It also provides aliased named for existing key symbols.
 static const struct curskey_key curskey_aliases[] = {
 	// Keep this sorted by `keyname`
-	{ CONST_CAST(char*, "DELETE"),    KEY_DC     },
-	{ CONST_CAST(char*, "DOWN"),      KEY_DOWN   },
-	{ CONST_CAST(char*, "END"),       KEY_END    },
-	{ CONST_CAST(char*, "ESCAPE"),    KEY_ESCAPE },
-	{ CONST_CAST(char*, "HOME"),      KEY_HOME   },
-	{ CONST_CAST(char*, "INSERT"),    KEY_IC     },
-	{ CONST_CAST(char*, "LEFT"),      KEY_LEFT   },
-	{ CONST_CAST(char*, "PAGEDOWN"),  KEY_NPAGE  },
-	{ CONST_CAST(char*, "PAGEUP"),    KEY_PPAGE  },
-	{ CONST_CAST(char*, "RIGHT"),     KEY_RIGHT  },
-	{ CONST_CAST(char*, "SPACE"),     KEY_SPACE  },
-	{ CONST_CAST(char*, "TAB"),       KEY_TAB    },
-	{ CONST_CAST(char*, "UP"),        KEY_UP     },
+	{ "DELETE",    KEY_DC     },
+	{ "DOWN",      KEY_DOWN   },
+	{ "END",       KEY_END    },
+	{ "ESCAPE",    KEY_ESCAPE },
+	{ "HOME",      KEY_HOME   },
+	{ "INSERT",    KEY_IC     },
+	{ "LEFT",      KEY_LEFT   },
+	{ "PAGEDOWN",  KEY_NPAGE  },
+	{ "PAGEUP",    KEY_PPAGE  },
+	{ "RIGHT",     KEY_RIGHT  },
+	{ "SPACE",     KEY_SPACE  },
+	{ "TAB",       KEY_TAB    },
+	{ "UP",        KEY_UP     },
 };
 #define ALIASES_SIZE  STATIC_CAST(int, sizeof(curskey_aliases) / sizeof(*curskey_aliases))
 
@@ -263,17 +255,10 @@ const char *curskey_get_keydef(int keycode)
 	return NULL;
 }
 
-#define IS_CARET(S) \
-	(S[0] == '^' && S[1] != '\0')
-
-#define IS_CONTROL(S) \
-	(UPPER(S[0]) == 'C' && S[1] == '-')
-
-#define IS_META(S) \
-	((UPPER(S[0]) == 'M' || UPPER(S[0]) == 'A') && S[1] == '-')
-
-#define IS_SHIFT(S) \
-	(UPPER(S[0]) == 'S' && S[1] == '-')
+#define IS_CARET(S)   (S[0] == '^' && S[1] != '\0')
+#define IS_CONTROL(S) (UPPER(S[0]) == 'C' && S[1] == '-')
+#define IS_SHIFT(S)   (UPPER(S[0]) == 'S' && S[1] == '-')
+#define IS_META(S)   ((UPPER(S[0]) == 'M' || UPPER(S[0]) == 'A') && S[1] == '-')
 
 int curskey_parse(const char *def)
 	CURSES_LIB_NOEXCEPT
@@ -317,11 +302,11 @@ int curskey_wgetch(WINDOW* win)
 {
 	int ch = wgetch(win);
 	if (ch == KEY_ESCAPE) {
-		//nodelay(win, TRUE);
+		nodelay(win, TRUE);
 		wtimeout(win, 0);
 		int ch2 = wgetch(win);
 		wtimeout(win, -1);
-		//nodelay(win, FALSE);
+		nodelay(win, FALSE);
 		if (ch2 == ERR)
 			return ch; // KEY_ESCAPE
 		else
@@ -354,7 +339,7 @@ int curskey_init()
 
 	define_rxvt_func_keys();
 
-	return OK;//create_ncurses_keynames(); TODO
+	return OK;
 }
 
 /* ============================================================================
