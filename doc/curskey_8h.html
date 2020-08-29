@@ -58,14 +58,14 @@ Macros</h2></td></tr>
 <tr class="memitem:ga2c8715b6e5aee9869609789bcfeb03a0"><td class="memItemLeft" align="right" valign="top">
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSES_LIB_COLORS</b>&#160;&#160;&#160;256</td></tr>
 <tr class="separator:ga2c8715b6e5aee9869609789bcfeb03a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab0477c94253eb7f7725115f2cb1689e7"><td class="memItemLeft" align="right" valign="top">
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONF.html#gab0477c94253eb7f7725115f2cb1689e7">CURSKEY_META_END_CHARACTERS</a>&#160;&#160;&#160;127</td></tr>
-<tr class="memdesc:gab0477c94253eb7f7725115f2cb1689e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines the range of characters which should be "meta-able". <br /></td></tr>
-<tr class="separator:gab0477c94253eb7f7725115f2cb1689e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab93bdc64a1976ca65fadfc3737c7c2fa"><td class="memItemLeft" align="right" valign="top">
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONF.html#gab93bdc64a1976ca65fadfc3737c7c2fa">CURSKEY_META_START</a>&#160;&#160;&#160;128</td></tr>
 <tr class="memdesc:gab93bdc64a1976ca65fadfc3737c7c2fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">The starting keycode for enumerating meta/alt key combinations. <br /></td></tr>
 <tr class="separator:gab93bdc64a1976ca65fadfc3737c7c2fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaaae7f592e352bc20d08ad0798a92a5aa"><td class="memItemLeft" align="right" valign="top">
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONF.html#gaaae7f592e352bc20d08ad0798a92a5aa">CURSKEY_META_RANGE</a>&#160;&#160;&#160;127</td></tr>
+<tr class="memdesc:gaaae7f592e352bc20d08ad0798a92a5aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines the range of characters which should be "meta-able". <br /></td></tr>
+<tr class="separator:gaaae7f592e352bc20d08ad0798a92a5aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaea3e0326f25a80bc6ba15cb9976d4d78"><td class="memItemLeft" align="right" valign="top">
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>A_INVALID</b>&#160;&#160;&#160;0xFF</td></tr>
 <tr class="separator:gaea3e0326f25a80bc6ba15cb9976d4d78"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -78,9 +78,6 @@ Macros</h2></td></tr>
 <tr class="memitem:ga4fa9fbcc86d5ee884a821459a87f3a54"><td class="memItemLeft" align="right" valign="top">
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>KEY_TAB</b>&#160;&#160;&#160;'\t'</td></tr>
 <tr class="separator:ga4fa9fbcc86d5ee884a821459a87f3a54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad06e66a899b065c65c2363233d8ebce2"><td class="memItemLeft" align="right" valign="top">
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KEY_DEL</b>&#160;&#160;&#160;127</td></tr>
-<tr class="separator:gad06e66a899b065c65c2363233d8ebce2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6c8ee53908fc5d6df19f1da8502b38dc"><td class="memItemLeft" align="right" valign="top">
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>KEY_ESCAPE</b>&#160;&#160;&#160;27</td></tr>
 <tr class="separator:ga6c8ee53908fc5d6df19f1da8502b38dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -96,43 +93,32 @@ Macros</h2></td></tr>
 <tr class="memitem:ga0e8036dd16e0d2a672f952a61a8674f6"><td class="memItemLeft" align="right" valign="top">
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>KEY_PAGEDOWN</b>&#160;&#160;&#160;KEY_NPAGE</td></tr>
 <tr class="separator:ga0e8036dd16e0d2a672f952a61a8674f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac25933e6554a888aa5a5e8b6c7230dfc"><td class="memItemLeft" align="right" valign="top">
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_MOD_CNTRL</b>&#160;&#160;&#160;1U</td></tr>
-<tr class="separator:gac25933e6554a888aa5a5e8b6c7230dfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga84e538a11b0e108114b64c468cbf76ba"><td class="memItemLeft" align="right" valign="top">
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_MOD_SHIFT</b>&#160;&#160;&#160;(1 &lt;&lt; 9)</td></tr>
+<tr class="separator:ga84e538a11b0e108114b64c468cbf76ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9b48a1dc8ed6aec12578b2712451a95c"><td class="memItemLeft" align="right" valign="top">
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_MOD_META</b>&#160;&#160;&#160;2U</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_MOD_META</b>&#160;&#160;&#160;(1 &lt;&lt; 10)</td></tr>
 <tr class="separator:ga9b48a1dc8ed6aec12578b2712451a95c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf0e549d267fe41fdfba182a6a905355d"><td class="memItemLeft" align="right" valign="top">
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_MOD_ALT</b>&#160;&#160;&#160;2U</td></tr>
-<tr class="separator:gaf0e549d267fe41fdfba182a6a905355d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab70c4e7bfed53ed24d40234bda3470e8"><td class="memItemLeft" align="right" valign="top"><a id="ab70c4e7bfed53ed24d40234bda3470e8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_MAX_HELPER</b>(A,  B)&#160;&#160;&#160;((A) &gt; (B) ? (A) : (B))</td></tr>
-<tr class="separator:ab70c4e7bfed53ed24d40234bda3470e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3bf364ac13d8ef36104cad7e73547200"><td class="memItemLeft" align="right" valign="top">
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_MOD_CTRL</b>&#160;&#160;&#160;(1 &lt;&lt; 11)</td></tr>
+<tr class="separator:ga3bf364ac13d8ef36104cad7e73547200"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af01508db0dfa8bad4297a15cc6d92032"><td class="memItemLeft" align="right" valign="top"><a id="af01508db0dfa8bad4297a15cc6d92032"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_KEY_MAX</b>&#160;&#160;&#160;CURSKEY_MAX_HELPER(KEY_MAX, <a class="el" href="group__CONF.html#gab93bdc64a1976ca65fadfc3737c7c2fa">CURSKEY_META_START</a> + <a class="el" href="group__CONF.html#gab0477c94253eb7f7725115f2cb1689e7">CURSKEY_META_END_CHARACTERS</a>)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSKEY_KEY_MAX</b>&#160;&#160;&#160;(KEY_MAX|CURSKEY_MOD_SHIFT|CURSKEY_MOD_META|CURSKEY_MOD_CTRL)</td></tr>
 <tr class="separator:af01508db0dfa8bad4297a15cc6d92032"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff60ebb59d386b1d05efe3a89d6325e6"><td class="memItemLeft" align="right" valign="top"><a id="aff60ebb59d386b1d05efe3a89d6325e6"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>CURSES_LIB_NOEXCEPT</b>&#160;&#160;&#160;/* noexcept */</td></tr>
 <tr class="separator:aff60ebb59d386b1d05efe3a89d6325e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad05362bcb4aee250a8755d8601c4956a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#ad05362bcb4aee250a8755d8601c4956a">curskey_mod_key</a>(KEY,  MODIFIERS)</td></tr>
-<tr class="memdesc:ad05362bcb4aee250a8755d8601c4956a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the keycode for a key with modifiers applied.  <a href="curskey_8h.html#ad05362bcb4aee250a8755d8601c4956a">More...</a><br /></td></tr>
-<tr class="separator:ad05362bcb4aee250a8755d8601c4956a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7a5c007df9581d2da9caedf08593910"><td class="memItemLeft" align="right" valign="top"><a id="ad7a5c007df9581d2da9caedf08593910"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>curskey_meta_key</b>(KEY)&#160;&#160;&#160;<a class="el" href="curskey_8h.html#ad05362bcb4aee250a8755d8601c4956a">curskey_mod_key</a>(KEY, CURSKEY_MOD_META)</td></tr>
-<tr class="separator:ad7a5c007df9581d2da9caedf08593910"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a190f511b029b73043879c0eec868961c"><td class="memItemLeft" align="right" valign="top"><a id="a190f511b029b73043879c0eec868961c"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>curskey_cntrl_key</b>(KEY)&#160;&#160;&#160;<a class="el" href="curskey_8h.html#ad05362bcb4aee250a8755d8601c4956a">curskey_mod_key</a>(KEY, CURSKEY_MOD_CNTRL)</td></tr>
-<tr class="separator:a190f511b029b73043879c0eec868961c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a992508dc17244580c2f2ec584bde7a15"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#a992508dc17244580c2f2ec584bde7a15">curskey_mod_key</a>(KEY,  MOD)</td></tr>
+<tr class="memdesc:a992508dc17244580c2f2ec584bde7a15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the keycode for a key with modifiers applied.  <a href="curskey_8h.html#a992508dc17244580c2f2ec584bde7a15">More...</a><br /></td></tr>
+<tr class="separator:a992508dc17244580c2f2ec584bde7a15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af005d9756aeae85c2ea430ab74407f39"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#af005d9756aeae85c2ea430ab74407f39">curskey_getch</a>()&#160;&#160;&#160;<a class="el" href="curskey_8h.html#ac6edb74cfeabcb6faf34f7c656134a29">curskey_wgetch</a>(stdscr)</td></tr>
+<tr class="separator:af005d9756aeae85c2ea430ab74407f39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:abc69a1bf26f69e282a15e40f951aef1e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#abc69a1bf26f69e282a15e40f951aef1e">curskey_init</a> () CURSES_LIB_NOEXCEPT</td></tr>
 <tr class="memdesc:abc69a1bf26f69e282a15e40f951aef1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize curskey.  <a href="curskey_8h.html#abc69a1bf26f69e282a15e40f951aef1e">More...</a><br /></td></tr>
 <tr class="separator:abc69a1bf26f69e282a15e40f951aef1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f0f74f58cd7f1204f53b0beb15dc13e"><td class="memItemLeft" align="right" valign="top"><a id="a2f0f74f58cd7f1204f53b0beb15dc13e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#a2f0f74f58cd7f1204f53b0beb15dc13e">curskey_destroy</a> () CURSES_LIB_NOEXCEPT</td></tr>
-<tr class="memdesc:a2f0f74f58cd7f1204f53b0beb15dc13e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy curskey. <br /></td></tr>
-<tr class="separator:a2f0f74f58cd7f1204f53b0beb15dc13e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0869ce8e4680840d6e4a6d5866627ebf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#a0869ce8e4680840d6e4a6d5866627ebf">curskey_unmod_key</a> (int key, unsigned int *modifiers) CURSES_LIB_NOEXCEPT</td></tr>
 <tr class="memdesc:a0869ce8e4680840d6e4a6d5866627ebf"><td class="mdescLeft">&#160;</td><td class="mdescRight">The opposite of curskey_mod_key.  <a href="curskey_8h.html#a0869ce8e4680840d6e4a6d5866627ebf">More...</a><br /></td></tr>
 <tr class="separator:a0869ce8e4680840d6e4a6d5866627ebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -142,15 +128,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curs
 <tr class="memitem:a59b2096663906935b3399f5ea5b1676f"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#a59b2096663906935b3399f5ea5b1676f">curskey_get_keydef</a> (int keycode) CURSES_LIB_NOEXCEPT</td></tr>
 <tr class="memdesc:a59b2096663906935b3399f5ea5b1676f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return key definition for a curses keycode.  <a href="curskey_8h.html#a59b2096663906935b3399f5ea5b1676f">More...</a><br /></td></tr>
 <tr class="separator:a59b2096663906935b3399f5ea5b1676f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae91fdd61a618d4bcc23abd97aa81efba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#ae91fdd61a618d4bcc23abd97aa81efba">curskey_define_meta_keys</a> () CURSES_LIB_NOEXCEPT</td></tr>
-<tr class="memdesc:ae91fdd61a618d4bcc23abd97aa81efba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines meta escape sequences in curses.  <a href="curskey_8h.html#ae91fdd61a618d4bcc23abd97aa81efba">More...</a><br /></td></tr>
-<tr class="separator:ae91fdd61a618d4bcc23abd97aa81efba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6f4471ac8be0148dfd6779cb70fa366"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#ab6f4471ac8be0148dfd6779cb70fa366">curskey_keycode</a> (const char *keyname) CURSES_LIB_NOEXCEPT</td></tr>
-<tr class="memdesc:ab6f4471ac8be0148dfd6779cb70fa366"><td class="mdescLeft">&#160;</td><td class="mdescRight">Translate the name of a curses KEY_ constant to its value. "KEY_DOWN" -&gt; 258.  <a href="curskey_8h.html#ab6f4471ac8be0148dfd6779cb70fa366">More...</a><br /></td></tr>
-<tr class="separator:ab6f4471ac8be0148dfd6779cb70fa366"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b6e03cf3fe3c76c76215f90fd9d391a"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#a7b6e03cf3fe3c76c76215f90fd9d391a">curskey_keyname</a> (int keycode) CURSES_LIB_NOEXCEPT</td></tr>
-<tr class="memdesc:a7b6e03cf3fe3c76c76215f90fd9d391a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like curses keyname(), translates the value of a KEY_ constant to its name, but strips leading "KEY_" and parentheses ("KEY_F(...)") off.  <a href="curskey_8h.html#a7b6e03cf3fe3c76c76215f90fd9d391a">More...</a><br /></td></tr>
-<tr class="separator:a7b6e03cf3fe3c76c76215f90fd9d391a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6edb74cfeabcb6faf34f7c656134a29"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#ac6edb74cfeabcb6faf34f7c656134a29">curskey_wgetch</a> (WINDOW *) CURSES_LIB_NOEXCEPT</td></tr>
+<tr class="memdesc:ac6edb74cfeabcb6faf34f7c656134a29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replacement for wgetch.  <a href="curskey_8h.html#ac6edb74cfeabcb6faf34f7c656134a29">More...</a><br /></td></tr>
+<tr class="separator:ac6edb74cfeabcb6faf34f7c656134a29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf0472b85cc9689d8e125965d452b74d"><td class="memItemLeft" align="right" valign="top">short&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#abf0472b85cc9689d8e125965d452b74d">curses_color_parse</a> (const char *s) CURSES_LIB_NOEXCEPT</td></tr>
 <tr class="memdesc:abf0472b85cc9689d8e125965d452b74d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses a color string.  <a href="curskey_8h.html#abf0472b85cc9689d8e125965d452b74d">More...</a><br /></td></tr>
 <tr class="separator:abf0472b85cc9689d8e125965d452b74d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -164,10 +144,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curs
 <tr class="memdesc:a96c44ebf56acb81fd1c93fa8ee9bf162"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get string for a curses attribute.  <a href="curskey_8h.html#a96c44ebf56acb81fd1c93fa8ee9bf162">More...</a><br /></td></tr>
 <tr class="separator:a96c44ebf56acb81fd1c93fa8ee9bf162"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6c08c638eb096ea90c4b38be60498b8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#af6c08c638eb096ea90c4b38be60498b8">curses_create_color_pair</a> (short fg, short bg) CURSES_LIB_NOEXCEPT</td></tr>
-<tr class="memdesc:af6c08c638eb096ea90c4b38be60498b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">TODO.  <a href="curskey_8h.html#af6c08c638eb096ea90c4b38be60498b8">More...</a><br /></td></tr>
+<tr class="memdesc:af6c08c638eb096ea90c4b38be60498b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a color pair.  <a href="curskey_8h.html#af6c08c638eb096ea90c4b38be60498b8">More...</a><br /></td></tr>
 <tr class="separator:af6c08c638eb096ea90c4b38be60498b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf1d15e15db98e88c772ef4c1363b6ba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#adf1d15e15db98e88c772ef4c1363b6ba">curses_reset_color_pairs</a> () CURSES_LIB_NOEXCEPT</td></tr>
-<tr class="memdesc:adf1d15e15db98e88c772ef4c1363b6ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">TODO.  <a href="curskey_8h.html#adf1d15e15db98e88c772ef4c1363b6ba">More...</a><br /></td></tr>
+<tr class="memitem:adf1d15e15db98e88c772ef4c1363b6ba"><td class="memItemLeft" align="right" valign="top"><a id="adf1d15e15db98e88c772ef4c1363b6ba"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="curskey_8h.html#adf1d15e15db98e88c772ef4c1363b6ba">curses_reset_color_pairs</a> () CURSES_LIB_NOEXCEPT</td></tr>
+<tr class="memdesc:adf1d15e15db98e88c772ef4c1363b6ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the color pairs created by <a class="el" href="curskey_8h.html#af6c08c638eb096ea90c4b38be60498b8" title="Create a color pair.">curses_create_color_pair()</a> <br /></td></tr>
 <tr class="separator:adf1d15e15db98e88c772ef4c1363b6ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
@@ -179,7 +160,7 @@ Variables</h2></td></tr>
 <div class="textblock"><p>Small library for handling/parsing keybindings in curses based terminal applications. </p>
 <dl class="section author"><dt>Author</dt><dd>Benjamin Abendroth </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>03 Aug 2020 This library allows you to<ul>
-<li>Parse attributes and colors</li>
+<li>Parse colors and attributes</li>
 <li>Parse key definitions into curses keycodes returned by getch()</li>
 <li>Get the string representation of a curses keycode</li>
 </ul>
@@ -188,15 +169,33 @@ Variables</h2></td></tr>
 <li>Curses special keys (HOME, END, LEFT, F1, ...)</li>
 <li>Bindings with control-key (C-x, ^x)</li>
 <li>Bindings with meta/alt-key (M-x, A-x)</li>
+<li>Bindings with shift key</li>
 </ul>
-<p>Usage: </p><div class="fragment"><div class="line"> initscr(); <span class="comment">// Has to be called!</span></div>
-<div class="line"> <span class="keywordflow">if</span> (<a class="code" href="curskey_8h.html#abc69a1bf26f69e282a15e40f951aef1e">curskey_init</a>() == OK) {</div>
-<div class="line">   ...</div>
-<div class="line">   <a class="code" href="curskey_8h.html#a2f0f74f58cd7f1204f53b0beb15dc13e">curskey_destroy</a>();</div>
+<p>Usage: </p><div class="fragment"><div class="line">initscr(); <span class="comment">// Has to be called!</span></div>
+<div class="line"><span class="keywordflow">if</span> (<a class="code" href="curskey_8h.html#abc69a1bf26f69e282a15e40f951aef1e">curskey_init</a>() == OK) {</div>
+<div class="line">  ...</div>
 <div class="line">}</div>
 </div><!-- fragment --> </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="ad05362bcb4aee250a8755d8601c4956a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad05362bcb4aee250a8755d8601c4956a">&#9670;&nbsp;</a></span>curskey_mod_key</h2>
+<a id="af005d9756aeae85c2ea430ab74407f39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af005d9756aeae85c2ea430ab74407f39">&#9670;&nbsp;</a></span>curskey_getch</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define curskey_getch</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td>&#160;&#160;&#160;<a class="el" href="curskey_8h.html#ac6edb74cfeabcb6faf34f7c656134a29">curskey_wgetch</a>(stdscr)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="curskey_8h.html#ac6edb74cfeabcb6faf34f7c656134a29" title="Replacement for wgetch.">curskey_wgetch()</a> </dd></dl>
+
+</div>
+</div>
+<a id="a992508dc17244580c2f2ec584bde7a15"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a992508dc17244580c2f2ec584bde7a15">&#9670;&nbsp;</a></span>curskey_mod_key</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -211,7 +210,7 @@ Variables</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname">MODIFIERS&#160;</td>
+          <td class="paramname">MOD&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -220,43 +219,14 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">(                                                                             \</div>
-<div class="line">    ((MODIFIERS) == 0) ? (                                                    \</div>
-<div class="line">        KEY                                                                   \</div>
-<div class="line">    )                                                                         \</div>
-<div class="line">    :((MODIFIERS) == CURSKEY_MOD_CNTRL) ? (                                   \</div>
-<div class="line">        ((KEY &gt;= <span class="charliteral">&#39;A&#39;</span> &amp;&amp; KEY &lt;= <span class="charliteral">&#39;_&#39;</span>) || (KEY &gt;= <span class="charliteral">&#39;a&#39;</span> &amp;&amp; KEY &lt;= <span class="charliteral">&#39;z&#39;</span>) || KEY == <span class="charliteral">&#39; &#39;</span>) ? ( \</div>
-<div class="line">            KEY % 32                                                          \</div>
-<div class="line">        ) : (                                                                 \</div>
-<div class="line">            ERR                                                               \</div>
-<div class="line">        )                                                                     \</div>
-<div class="line">    )                                                                         \</div>
-<div class="line">    :((MODIFIERS) == CURSKEY_MOD_META) ? (                                    \</div>
-<div class="line">        (KEY &gt;= 0 &amp;&amp; KEY &lt;= <a class="code" href="group__CONF.html#gab0477c94253eb7f7725115f2cb1689e7">CURSKEY_META_END_CHARACTERS</a>) ? (                  \</div>
-<div class="line">            KEY + <a class="code" href="group__CONF.html#gab93bdc64a1976ca65fadfc3737c7c2fa">CURSKEY_META_START</a>                                          \</div>
-<div class="line">        ) : (                                                                 \</div>
-<div class="line">            ERR                                                               \</div>
-<div class="line">        )                                                                     \</div>
-<div class="line">    )                                                                         \</div>
-<div class="line">    :((MODIFIERS) == (CURSKEY_MOD_CNTRL|CURSKEY_MOD_META)) ? (                \</div>
-<div class="line">        ((KEY &gt;= <span class="charliteral">&#39;A&#39;</span> &amp;&amp; KEY &lt;= <span class="charliteral">&#39;_&#39;</span>) || (KEY &gt;= <span class="charliteral">&#39;a&#39;</span> &amp;&amp; KEY &lt;= <span class="charliteral">&#39;z&#39;</span>) || KEY == <span class="charliteral">&#39; &#39;</span>) ? ( \</div>
-<div class="line">            KEY % 32 + <a class="code" href="group__CONF.html#gab93bdc64a1976ca65fadfc3737c7c2fa">CURSKEY_META_START</a>                                     \</div>
-<div class="line">        ) : (                                                                 \</div>
-<div class="line">            ERR                                                               \</div>
-<div class="line">        )                                                                     \</div>
-<div class="line">    )                                                                         \</div>
-<div class="line">    :(                                                                        \</div>
-<div class="line">        ERR                                                                   \</div>
-<div class="line">    )                                                                         \</div>
-<div class="line">)</div>
-</div><!-- fragment -->
+
 <p>Return the keycode for a key with modifiers applied. </p>
 <p>Available modifiers are:</p><ul>
-<li><b>CURSKEY_MOD_META</b> / <b>CURSKEY_MOD_ALT</b></li>
-<li><b>CURSKEY_MOD_CNTRL</b></li>
+<li><b>CURSKEY_MOD_META</b></li>
+<li><b>CURSKEY_MOD_CTRL</b></li>
+<li><b>CURSKEY_MOD_SHIFT</b></li>
 </ul>
-<p>See also the macros curskey_meta_key(), curskey_cntrl_key().</p>
-<dl class="section note"><dt>Note</dt><dd>This is implemented as a macro since since it shall be usable as a constant expression</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This is implemented as a macro since since it shall be usable as a constant expression (for example in switch-case).</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>Keycode or <b>ERR</b> if the modifiers cannot be applied to this key. </dd></dl>
 
 </div>
@@ -378,48 +348,8 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>TODO. </p>
-<dl class="section return"><dt>Returns</dt><dd>TODO </dd></dl>
-
-</div>
-</div>
-<a id="adf1d15e15db98e88c772ef4c1363b6ba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf1d15e15db98e88c772ef4c1363b6ba">&#9670;&nbsp;</a></span>curses_reset_color_pairs()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void curses_reset_color_pairs </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>TODO. </p>
-<dl class="section return"><dt>Returns</dt><dd>TODO </dd></dl>
-
-</div>
-</div>
-<a id="ae91fdd61a618d4bcc23abd97aa81efba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae91fdd61a618d4bcc23abd97aa81efba">&#9670;&nbsp;</a></span>curskey_define_meta_keys()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int curskey_define_meta_keys </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Defines meta escape sequences in curses. </p>
-<dl class="section return"><dt>Returns</dt><dd><b>OK</b> if meta keys are available, <b>ERR</b> otherwise. </dd></dl>
+<p>Create a color pair. </p>
+<dl class="section return"><dt>Returns</dt><dd>Color pair or <b>ERR</b> on error </dd></dl>
 
 </div>
 </div>
@@ -441,7 +371,7 @@ Variables</h2></td></tr>
 
 <p>Return key definition for a curses keycode. </p>
 <p>The returned string is of the format "[C-][M-]KEY".</p>
-<p>This function is not thread-safe.</p>
+<dl class="section note"><dt>Note</dt><dd>This function is not thread-safe.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>The key definition or <b>NULL</b> on error </dd></dl>
 
 </div>
@@ -463,49 +393,6 @@ Variables</h2></td></tr>
 
 <p>Initialize curskey. </p>
 <dl class="section return"><dt>Returns</dt><dd><b>OK</b> on success, <b>ERR</b> on failure </dd></dl>
-
-</div>
-</div>
-<a id="ab6f4471ac8be0148dfd6779cb70fa366"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab6f4471ac8be0148dfd6779cb70fa366">&#9670;&nbsp;</a></span>curskey_keycode()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int curskey_keycode </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>keyname</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Translate the name of a curses KEY_ constant to its value. "KEY_DOWN" -&gt; 258. </p>
-<dl class="section return"><dt>Returns</dt><dd>Keycode or <b>ERR</b> on failure. </dd></dl>
-
-</div>
-</div>
-<a id="a7b6e03cf3fe3c76c76215f90fd9d391a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b6e03cf3fe3c76c76215f90fd9d391a">&#9670;&nbsp;</a></span>curskey_keyname()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* curskey_keyname </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>keycode</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Like curses keyname(), translates the value of a KEY_ constant to its name, but strips leading "KEY_" and parentheses ("KEY_F(...)") off. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is not thread-safe.</dd></dl>
-<dl class="section return"><dt>Returns</dt><dd>The name of the key or <b>NULL</b> on failure. </dd></dl>
 
 </div>
 </div>
@@ -533,7 +420,7 @@ Variables</h2></td></tr>
 <li>Character with both modifiers (C-M-x, M-C-x, M-^x, ...)</li>
 <li>Curses keyname, no modifiers allowed (KEY_HOME, HOME, F1, F(1), ...)</li>
 </ul>
-<p>Returns ERR if either</p><ul>
+<p>Returns <b>ERR</b> if either</p><ul>
 <li>The key definition is NULL or empty</li>
 <li>The key could not be found ("KEY_FOO")</li>
 <li>The key combination is generally invalid ("C-TAB", "C-RETURN")</li>
@@ -575,6 +462,28 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="ac6edb74cfeabcb6faf34f7c656134a29"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6edb74cfeabcb6faf34f7c656134a29">&#9670;&nbsp;</a></span>curskey_wgetch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int curskey_wgetch </td>
+          <td>(</td>
+          <td class="paramtype">WINDOW *&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Replacement for wgetch. </p>
+<dl class="section note"><dt>Note</dt><dd>This changes the timeout of the window using <b>wtimeout()</b></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Keycode </dd></dl>
+
+</div>
+</div>
 <h2 class="groupheader">Variable Documentation</h2>
 <a id="a0ae468036f0dbde7213c7e33f38cab61"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0ae468036f0dbde7213c7e33f38cab61">&#9670;&nbsp;</a></span>KEY_RETURN</h2>
@@ -592,10 +501,7 @@ Variables</h2></td></tr>
 </div>
 </div>
 </div><!-- contents -->
-<div class="ttc" id="acurskey_8h_html_abc69a1bf26f69e282a15e40f951aef1e"><div class="ttname"><a href="curskey_8h.html#abc69a1bf26f69e282a15e40f951aef1e">curskey_init</a></div><div class="ttdeci">int curskey_init() CURSES_LIB_NOEXCEPT</div><div class="ttdoc">Initialize curskey.</div><div class="ttdef"><b>Definition:</b> curskey.c:377</div></div>
-<div class="ttc" id="agroup__CONF_html_gab0477c94253eb7f7725115f2cb1689e7"><div class="ttname"><a href="group__CONF.html#gab0477c94253eb7f7725115f2cb1689e7">CURSKEY_META_END_CHARACTERS</a></div><div class="ttdeci">#define CURSKEY_META_END_CHARACTERS</div><div class="ttdoc">Defines the range of characters which should be &quot;meta-able&quot;.</div><div class="ttdef"><b>Definition:</b> curskey.h:56</div></div>
-<div class="ttc" id="agroup__CONF_html_gab93bdc64a1976ca65fadfc3737c7c2fa"><div class="ttname"><a href="group__CONF.html#gab93bdc64a1976ca65fadfc3737c7c2fa">CURSKEY_META_START</a></div><div class="ttdeci">#define CURSKEY_META_START</div><div class="ttdoc">The starting keycode for enumerating meta/alt key combinations.</div><div class="ttdef"><b>Definition:</b> curskey.h:58</div></div>
-<div class="ttc" id="acurskey_8h_html_a2f0f74f58cd7f1204f53b0beb15dc13e"><div class="ttname"><a href="curskey_8h.html#a2f0f74f58cd7f1204f53b0beb15dc13e">curskey_destroy</a></div><div class="ttdeci">void curskey_destroy() CURSES_LIB_NOEXCEPT</div><div class="ttdoc">Destroy curskey.</div><div class="ttdef"><b>Definition:</b> curskey.c:384</div></div>
+<div class="ttc" id="acurskey_8h_html_abc69a1bf26f69e282a15e40f951aef1e"><div class="ttname"><a href="curskey_8h.html#abc69a1bf26f69e282a15e40f951aef1e">curskey_init</a></div><div class="ttdeci">int curskey_init() CURSES_LIB_NOEXCEPT</div><div class="ttdoc">Initialize curskey.</div><div class="ttdef"><b>Definition:</b> curskey.c:334</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">

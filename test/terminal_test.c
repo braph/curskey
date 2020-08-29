@@ -5,12 +5,23 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+#undef  CTRL  //usr/include/sys/ttydefaults.h defines this
 #define ALT   CURSKEY_MOD_META
 #define SHIFT CURSKEY_MOD_SHIFT
-#define CNTRL CURSKEY_MOD_CNTRL
+#define CTRL  CURSKEY_MOD_CTRL
+#define ARRAY_LEN(A) (sizeof(A)/sizeof(*A))
 
-static int TESTS_FAILED = 0;
-static char* OUTPUT;
+static struct {
+	int keycode[8192];
+	char* keyseq[8192];
+	int count;
+} RESULTS;
+
+static void add_result(int keycode, char* keyseq) {
+	RESULTS.keycode[RESULTS.count] = keycode;
+	RESULTS.keyseq[RESULTS.count] = keyseq;
+	RESULTS.count++;
+}
 
 static const char* curses_keysm_to_X11_keysym_str(int key) {
 	static char buf[16];
@@ -43,9 +54,9 @@ static int is_blacklisted(int key_modded) {
 	switch (key_modded) {
 	case curskey_mod_key('l', ALT):   return 1;
 	case curskey_mod_key('s', ALT):   return 1;
-	case curskey_mod_key('c', CNTRL): return 1;
-	case curskey_mod_key('s', CNTRL): return 1;
-	case curskey_mod_key('z', CNTRL): return 1;
+	case curskey_mod_key('c', CTRL): return 1;
+	case curskey_mod_key('s', CTRL): return 1;
+	case curskey_mod_key('z', CTRL): return 1;
 	default:                          return 0;
 	}
 }
@@ -54,7 +65,7 @@ static int X11_send_key(int key, int mod) {
 	char def[32] = "";
 	if (mod & ALT)   strcat(def, "alt+");
 	if (mod & SHIFT) strcat(def, "shift+");
-	if (mod & CNTRL) strcat(def, "ctrl+");
+	if (mod & CTRL) strcat(def, "ctrl+");
 	strcat(def, curses_keysm_to_X11_keysym_str(key));
 
 	int pid = fork();
@@ -73,68 +84,81 @@ void test(int key, int mod) {
 	if (is_blacklisted(key_modded))
 		return;
 
-	strcat(OUTPUT, "Test: ");
-	strcat(OUTPUT, curskey_get_keydef(key_modded));
-	strcat(OUTPUT, " ... ");
-
 	addstr(curskey_get_keydef(key_modded));
-	napms(100);
+	napms(10);
 
 	if (X11_send_key(key, mod)) {
-		TESTS_FAILED++;
-		strcat(OUTPUT, "FAILED: xdotool error\n");
+		add_result(key_modded, "xdotool error");
 		return;
 	}
 
 	wtimeout(stdscr, 100);
 	int having_key = curskey_getch();
 	if (having_key == key_modded)
-		strcat(OUTPUT, "OK\n");
+		add_result(key_modded, NULL);
 	else {
-		TESTS_FAILED++;
-		strcat(OUTPUT, "FAILED: Key sequence is: ");
-
 		wtimeout(stdscr, 0);
 		while (getch() != ERR); // eat up keys
 
 		X11_send_key(key, mod);
 		keypad(stdscr, FALSE);
-		for (int c; (c = getch()) != ERR;) {
+		char keyseq[32] = "";
+		for (int c, i = 0; (c = getch()) != ERR; ++i) {
 			char s[8];
 			if (c <= 32 || c >= 127)
 				sprintf(s, "%X", c);
 			else
 				sprintf(s, "%c", c);
-			strcat(OUTPUT, s);
-			strcat(OUTPUT, " ");
+			strcat(keyseq, s);
+			strcat(keyseq, " ");
 		}
-		strcat(OUTPUT, "\n");
+		add_result(key_modded, strdup(keyseq));
 		keypad(stdscr, TRUE);
 	}
 }
 
 int main() {
+	RESULTS.count = 0;
+
 	initscr();
 	curskey_init();
 	noecho();
 
-	OUTPUT = malloc(1024*1024*5);
-	*OUTPUT = '\0';
+	const int keysyms[] = {
+		KEY_UP,
+		KEY_DOWN,
+		KEY_LEFT,
+		KEY_RIGHT,
+		KEY_PAGEUP,
+		KEY_PAGEDOWN,
+		KEY_HOME,
+		KEY_END,
+		KEY_INSERT,
+		KEY_DELETE
+	};
 
 	int c;
-	test(KEY_UP, 0);
-	test(KEY_DOWN, 0);
-	test(KEY_LEFT, 0);
-	test(KEY_RIGHT, 0);
-	test(KEY_HOME, 0);
-	//for (c = 'a'; c <= 'z'; ++c) test(c, 0);
-	//for (c = 'a'; c <= 'z'; ++c) test(c, ALT);
-	//for (c = 'a'; c <= 'z'; ++c) test(c, CNTRL);
+	for (c = 0; c < ARRAY_LEN(keysyms); ++c)
+		test(keysyms[c], 0);
+	for (c = 'a'; c <= 'z'; ++c) test(c, 0);
+	for (c = 'a'; c <= 'z'; ++c) test(c, ALT);
+	//for (c = 'a'; c <= 'z'; ++c) test(c, CTRL);
 	//for (c = 'a'; c <= 'z'; ++c) test(c, SHIFT);
-	//for (c = 'a'; c <= 'z'; ++c) test(c, SHIFT | CNTRL);
+	//for (c = 'a'; c <= 'z'; ++c) test(c, SHIFT | CTRL);
 	//for (c = 'a'; c <= 'z'; ++c) test(c, SHIFT | ALT);
+	for (c = 1; c <= 12; ++c)    test(KEY_F(c), 0);
 
 	endwin();
-	puts(OUTPUT);
-	return !! TESTS_FAILED;
+
+	int tests_failed = 0;
+	for (int i = 0; i < RESULTS.count; ++i) {
+		tests_failed += !! RESULTS.keyseq[i];
+		printf("%-20s %s%s\n",
+				curskey_get_keydef(RESULTS.keycode[i]),
+				(RESULTS.keyseq[i] ? "FAILED: Keysequence is " : "OK"),
+				(RESULTS.keyseq[i] ? RESULTS.keyseq[i] : "")
+		);
+	}
+
+	return !! tests_failed;
 }

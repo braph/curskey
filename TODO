@@ -1,4 +1,16 @@
 CURSKEY_META_END_CHARACTERS 128 -> 127 + check return code of define_key
 define_key(127, KEY_BACKSPACE)
 terminology: A-F1-F4
-CNTRL -> CTRL
+setenv("ESCDELAY")
+curskey_get_keydef(): reoder SHIFT/ALT/CTRL
+
+Terminals:
+	- aterm
+	- xterm
+	- eterm
+	- konsole
+	- terminology
+	- terminator
+	- urxvt
+	- rxvvt
+	- st

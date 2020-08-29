@@ -24,7 +24,7 @@
  *         terminal applications.
  *
  * This library allows you to
- *   - Parse attributes and colors
+ *   - Parse colors and attributes
  *	 - Parse key definitions into curses keycodes returned by getch()
  *	 - Get the string representation of a curses keycode
  *
@@ -39,8 +39,7 @@
  *       initscr(); // Has to be called!
  *       if (curskey_init() == OK) {
  *       	...
- *       	curskey_destroy();
- *      }
+ *       }
  * \endcode
  */
 
@@ -80,8 +79,7 @@
 /// @{
 #define CURSKEY_MOD_SHIFT   (1 << 9)
 #define CURSKEY_MOD_META    (1 << 10)
-#define CURSKEY_MOD_ALT     (1 << 10)
-#define CURSKEY_MOD_CNTRL   (1 << 11)
+#define CURSKEY_MOD_CTRL    (1 << 11)
 /// @}
 
 /// Holds the character that should be interpreted as **RETURN**.
@@ -89,8 +87,7 @@
 /// It defaults to '\\n'.
 extern int KEY_RETURN;
 
-#define CURSKEY_MAX_HELPER(A,B) ((A) > (B) ? (A) : (B))
-#define CURSKEY_KEY_MAX         CURSKEY_MAX_HELPER(KEY_MAX, CURSKEY_META_START + CURSKEY_META_RANGE)
+#define CURSKEY_KEY_MAX (KEY_MAX|CURSKEY_MOD_SHIFT|CURSKEY_MOD_META|CURSKEY_MOD_CTRL)
 
 #ifdef __cplusplus
 #define CURSES_LIB_NOEXCEPT noexcept
@@ -109,21 +106,11 @@ extern int KEY_RETURN;
 int curskey_init() CURSES_LIB_NOEXCEPT;
 
 /**
- * @brief Destroy curskey.
- *
- * This function can be called as soon as the functions
- *   - **curskey_get_keydef** and
- *   - **curskey_parse**
- * will no longer be in use.
- */
-void curskey_destroy() CURSES_LIB_NOEXCEPT;
-
-/**
  * @brief Return the keycode for a key with modifiers applied.
  *
  * Available modifiers are:
- * 	- **CURSKEY_MOD_META** / **CURSKEY_MOD_ALT**
- * 	- **CURSKEY_MOD_CNTRL**
+ * 	- **CURSKEY_MOD_META**
+ * 	- **CURSKEY_MOD_CTRL**
  * 	- **CURSKEY_MOD_SHIFT**
  *
  * @note   This is implemented as a macro since since it shall be usable
@@ -133,13 +120,13 @@ void curskey_destroy() CURSES_LIB_NOEXCEPT;
  */
 #define curskey_mod_key(KEY, MOD)                                             \
 (                                                                             \
-	((MOD) & ~(CURSKEY_MOD_CNTRL|CURSKEY_MOD_ALT|CURSKEY_MOD_SHIFT)) ? (      \
+	((MOD) & ~(CURSKEY_MOD_CTRL|CURSKEY_MOD_META|CURSKEY_MOD_SHIFT)) ? (      \
 		ERR /* Invalid modifier */                                            \
 	)                                                                         \
 	:(((KEY) >= 'a' && (KEY) <= 'z') || ((KEY) >= 'A' && (KEY) <= 'Z')) ? (   \
 		(((KEY)                                                               \
 			& (((MOD) & CURSKEY_MOD_SHIFT) ? ~0x20 : 0xFF))                   \
-			% (((MOD) & CURSKEY_MOD_CNTRL) ? 32    : 0xFF))                   \
+			% (((MOD) & CURSKEY_MOD_CTRL)  ? 32    : 0xFF))                   \
 			+ (((MOD) & CURSKEY_MOD_META)  ? CURSKEY_META_START : 0)          \
 	)                                                                         \
 	:(((KEY) >= '[' && ((KEY) <= '_')) || (KEY) == ' ') ? (                   \
@@ -147,11 +134,11 @@ void curskey_destroy() CURSES_LIB_NOEXCEPT;
 			ERR /* Shift not allowed here */                                  \
 		)                                                                     \
 		: ((KEY)                                                              \
-			% (((MOD) & CURSKEY_MOD_CNTRL) ? 32 : 0xFF))                      \
-			+ (((MOD) & CURSKEY_MOD_META)  ? CURSKEY_META_START : 0)          \
+			% (((MOD) & CURSKEY_MOD_CTRL) ? 32 : 0xFF))                       \
+			+ (((MOD) & CURSKEY_MOD_META) ? CURSKEY_META_START : 0)           \
 	)                                                                         \
 	:((KEY) >= 0 && (KEY) <= CURSKEY_META_RANGE) ? (                          \
-		((MOD) & (CURSKEY_MOD_SHIFT|CURSKEY_MOD_CNTRL)) ? (                   \
+		((MOD) & (CURSKEY_MOD_SHIFT|CURSKEY_MOD_CTRL)) ? (                    \
 			ERR /* Shift / Control not allowed here */                        \
 		)                                                                     \
 		: (KEY)                                                               \
@@ -210,6 +197,8 @@ const char* curskey_get_keydef(int keycode) CURSES_LIB_NOEXCEPT;
  * @brief Replacement for wgetch
  *
  * @note  This changes the timeout of the window using **wtimeout()**
+ *
+ * @return Keycode
  */
 int curskey_wgetch(WINDOW*) CURSES_LIB_NOEXCEPT;
 
