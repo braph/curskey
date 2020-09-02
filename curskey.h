@@ -285,4 +285,4 @@ static inline int curskey_parse(const std::string& keydef)
 { return curskey_parse(keydef.c_str()); }
 #endif
 
-#endif // CURSKEY_H_
+#endif /* CURSKEY_H_ */

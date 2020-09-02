@@ -1,14 +1,14 @@
 
 
-curskey_test: curskey_test.c
+curskey_test: curskey_test.c ../curskey.o
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses ../curskey.o -o curskey_test curskey_test.c
 	if which valgrind; then valgrind ./curskey_test; else ./curskey_test; fi
 
-colors: colors.c
+colors: colors.c ../curskey.o
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses ../curskey.o -o colors colors.c
 	if which valgrind; then valgrind ./colors; else ./colors; fi
 
-terminal_test: terminal_test.c
+terminal_test: terminal_test.c ../curskey.o
 	$(CC) $(CFLAGS) -Wall -Wextra -Werror -lcurses ../curskey.o -o terminal_test terminal_test.c
 
 clean:

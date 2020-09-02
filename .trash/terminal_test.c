@@ -14,29 +14,41 @@
 #define CTRL  CURSKEY_MOD_CTRL
 #define ARRAY_LEN(A) ((int) (sizeof(A)/sizeof(*A)))
 
-enum Status { E_OK, E_BLACKLISTED, E_XDOTOOL, E_INVALID_KEYSEQ, E_TRAILING_CHARS };
-const char* StatusStr[] = {"OK", "(OK)", "XDOTOOL", "INVALID_KEYSEQ", "TRAILING_CHARS"};
+enum Status { E_OK, E_XDOTOOL, E_INVALID_KEYSEQ, E_TRAILING_CHARS };
+const char* StatusStr[] = {"OK", "E_XDOTOOL", "E_INVALID_KEYSEQ", "E_TRAILING_CHARS"};
 
 static struct {
-	enum Status status         [8192];
 	int         keycode        [8192];
 	int         having_keycode [8192];
 	char*       keyseq         [8192];
 	char*       rest           [8192];
+	enum Status status         [8192];
 	int         count;
 } RESULTS;
 
-static void add_test(int key, int mod) {
-	RESULTS.count[RESULTS.keycode] = curskey_mod_key(key, mod);
+static struct {
+	int keycode[8192];
+	int count;
+} BLACKLIST;
+
+static void add_result(int keycode, int having, const char* keyseq, const char* rest, enum Status code) {
+	RESULTS.count[RESULTS.keycode]        = keycode;
+	RESULTS.count[RESULTS.having_keycode] = having;
+	RESULTS.count[RESULTS.keyseq]         = strdup(keyseq);
+	RESULTS.count[RESULTS.rest]           = strdup(rest);
+	RESULTS.count[RESULTS.status]         = code;
 	RESULTS.count++;
 }
 
 static void add_blacklist(int key_modded) {
-	for (int i = 0; i < RESULTS.count; ++i)
-		if (RESULTS.keycode[i] == key_modded) {
-			RESULTS.status[i] = E_BLACKLISTED;
-			return;
-		}
+	BLACKLIST.keycode[BLACKLIST.count++] = key_modded;
+}
+
+static int is_blacklisted(int key_modded) {
+	for (int i = 0; i < BLACKLIST.count; ++i)
+		if (BLACKLIST.keycode[i] == key_modded)
+			return 1;
+	return 0;
 }
 
 static const char* curses_keysm_to_X11_keysym_str(int key) {
@@ -98,69 +110,47 @@ static void eat_keys(char* buffer, int bufsize) {
 	*buffer = '\0';
 }
 
-static void run_get_keydefs() {
+void test(int key, int mod) {
 	char keyseq[32];
-
-	keypad(stdscr, FALSE);
-	napms(500); // The terminal driver needs some time after `keypad()`
-
-	for (int i = 0; i < RESULTS.count; ++i) {
-		if (RESULTS.status[i] == E_BLACKLISTED)
-			continue;
-
-		int key_modded = RESULTS.keycode[i];
-		printw("[%d] %s\n", key_modded, curskey_get_keydef(key_modded));
-
-		unsigned mod;
-		int key = curskey_unmod_key(key_modded, &mod);
-		X11_send_key(key, mod);
-		wtimeout(stdscr, 1000);
-		eat_keys(keyseq, sizeof(keyseq));
-		RESULTS.keyseq[i] = strdup(keyseq);
-	}
-}
-
-static void run_test() {
 	char remaining[32];
+	int key_modded = curskey_mod_key(key, mod);
+
+	if (is_blacklisted(key_modded))
+		return;
+
+	printw("[%d] %s\n", key_modded, curskey_get_keydef(key_modded));
+
+	wtimeout(stdscr, 0); // TODO
+	eat_keys(remaining, sizeof(remaining)); // TODO
 
 	keypad(stdscr, TRUE);
-	napms(500); // The terminal driver needs some time after `keypad()`
+	napms(100);
+	wtimeout(stdscr, 1000);
 
-	for (int i = 0; i < RESULTS.count; ++i) {
-		if (RESULTS.status[i] == E_BLACKLISTED)
-			continue;
-
-		int key_modded = RESULTS.keycode[i];
-		printw("[%d] %s\n", key_modded, curskey_get_keydef(key_modded));
-
-		unsigned mod;
-		int key = curskey_unmod_key(key_modded, &mod);
-
-		if (X11_send_key(key, mod)) {
-			RESULTS.status[i] = E_XDOTOOL;
-			continue;
-		}
-
-		wtimeout(stdscr, 1000);
-		int having_key = curskey_getch();
-		wtimeout(stdscr, 0);
-		eat_keys(remaining, sizeof(remaining));
-
-		enum Status code = E_OK;
-		if (having_key != key_modded)
-			code = E_INVALID_KEYSEQ;
-		else if (*remaining)
-			code = E_TRAILING_CHARS;
-		RESULTS.status[i] = code;
-		RESULTS.rest[i] = strdup(remaining);
-		RESULTS.having_keycode[i] = having_key;
+	if (X11_send_key(key, mod)) {
+		add_result(key_modded, 0, "", "", E_XDOTOOL);
+		return;
 	}
+
+	int having_key = curskey_getch();
+	wtimeout(stdscr, 0);
+	eat_keys(remaining, sizeof(remaining));
+
+	// get keydef
+	keypad(stdscr, FALSE);
+	X11_send_key(key, mod);
+	wtimeout(stdscr, 1000);
+	eat_keys(keyseq, sizeof(keyseq));
+
+	enum Status code = E_OK;
+	if (having_key != key_modded)
+		code = E_INVALID_KEYSEQ;
+	else if (*remaining)
+		code = E_TRAILING_CHARS;
+	add_result(key_modded, having_key, keyseq, remaining, code);
 }
 
 static const char* keyseq_readable(const char* seq) {
-	if (! seq)
-		return ""; // TODO
-
 	static char readable[32*888]; // TODO
 	readable[0] = '\0';
 
@@ -210,10 +200,35 @@ static void print_test_results(const char* file) {
 	fprintf(fh, "]");
 	fclose(fh);
 }
-
+		
 int main(int argc, char**argv) {
+	RESULTS.count = 0;
+	BLACKLIST.count = 0;
 	const char* OUTFILE = "result.json";
 
+	for (int opt; (opt = getopt(argc, argv, "b:o:")) != -1;)
+		switch (opt) {
+			case 'o': OUTFILE = optarg; break;
+			case 'b': add_blacklist(curskey_parse(optarg)); break;
+			default:  return printf(USAGE, argv[0]), 1;
+		}
+
+	add_blacklist(curskey_mod_key('l', ALT));
+	add_blacklist(curskey_mod_key('s', ALT));
+	add_blacklist(curskey_mod_key('c', CTRL));
+	add_blacklist(curskey_mod_key('s', CTRL));
+	add_blacklist(curskey_mod_key('z', CTRL));
+	add_blacklist(KEY_F(8));
+	add_blacklist(KEY_F(11));
+
+	initscr();
+	scrollok(stdscr, TRUE);
+	curskey_init();
+	noecho();
+	char trash;
+	wtimeout(stdscr, 1000); // Give the terminal 1 sec for initialization.
+	eat_keys(&trash, 1);    // Some terminals send a KEY_RESIZE at the beginning.
+	
 	/* ==========================================================================
 	 * Tests ====================================================================
 	 * ========================================================================*/
@@ -224,45 +239,14 @@ int main(int argc, char**argv) {
 	};
 
 	int c;
-	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], 0);
-	for (c = 'a'; c <= 'z'; ++c)          add_test(c, 0);
-	for (c = 'a'; c <= 'z'; ++c)          add_test(c, ALT);
-	//for (c = 'a'; c <= 'z'; ++c)        add_test(c, CTRL);
-	//for (c = 'a'; c <= 'z'; ++c)        add_test(c, SHIFT);
-	//for (c = 'a'; c <= 'z'; ++c)        add_test(c, SHIFT | CTRL);
-	//for (c = 'a'; c <= 'z'; ++c)        add_test(c, SHIFT | ALT);
-	for (c = 1; c <= 12; ++c)             add_test(KEY_F(c), 0);
-
-	/* ==========================================================================
-	 * Commandline ==============================================================
-	 * ========================================================================*/
-
-	for (int opt; (opt = getopt(argc, argv, "b:o:")) != -1;)
-		switch (opt) {
-			case 'o': OUTFILE = optarg; break;
-			case 'b': add_blacklist(curskey_parse(optarg)); break;
-			default:  return printf(USAGE, argv[0]), 1;
-		}
-
-	add_blacklist(curskey_mod_key('s', ALT));
-	add_blacklist(curskey_mod_key('c', CTRL));
-	add_blacklist(curskey_mod_key('s', CTRL));
-	add_blacklist(curskey_mod_key('z', CTRL));
-
-	initscr();
-	scrollok(stdscr, TRUE);
-	curskey_init();
-	noecho();
-	char trash;
-	wtimeout(stdscr, 1000); // Give the terminal 1 sec for initialization.
-	eat_keys(&trash, 1);    // Some terminals send a KEY_RESIZE at the beginning.
-
-	/* ==========================================================================
-	 * Run Tests ================================================================
-	 * ========================================================================*/
-
-	run_test();
-	run_get_keydefs();
+	for (c = 0; c < ARRAY_LEN(keys); ++c) test(keys[c], 0);
+	for (c = 'a'; c <= 'z'; ++c)          test(c, 0);
+	for (c = 'a'; c <= 'z'; ++c)          test(c, ALT);
+	//for (c = 'a'; c <= 'z'; ++c)        test(c, CTRL);
+	//for (c = 'a'; c <= 'z'; ++c)        test(c, SHIFT);
+	//for (c = 'a'; c <= 'z'; ++c)        test(c, SHIFT | CTRL);
+	//for (c = 'a'; c <= 'z'; ++c)        test(c, SHIFT | ALT);
+	for (c = 1; c <= 12; ++c)             test(KEY_F(c), 0);
 
 	/* ==========================================================================
 	 * Output ===================================================================
