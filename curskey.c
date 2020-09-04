@@ -310,6 +310,10 @@ int curskey_wgetch(WINDOW* win)
 int curskey_init()
 	CURSES_LIB_NOEXCEPT
 {
+	// It is important to call keypad(stdscr, TRUE) before we are defining
+	// our own keys, because keypad() does also defines keys and would
+	// overwrite our Shift/Control-F{1..12} definitions.
+	keypad(stdscr, TRUE);
 #ifdef NCURSES_VERSION
 	//define_key("\x57", KEY_BACKSPACE); // 127 TODO?
 	define_xterm_keys();
@@ -323,8 +327,8 @@ int curskey_init()
 	define_rxvt_key('6', KEY_NPAGE);
 	define_rxvt_key('7', KEY_HOME);
 	define_rxvt_key('8', KEY_END);
-	define_key("\033[7~", KEY_HOME); // TODO!
-	define_key("\033[8~", KEY_END);  // TODO!
+	//define_key("\033[7~", KEY_HOME); // TODO!
+	//define_key("\033[8~", KEY_END);  // TODO!
 	define_rxvt_func_keys();
 #endif
 	return OK;

@@ -267,21 +267,20 @@ int curses_create_color_pair(short fg, short bg) CURSES_LIB_NOEXCEPT;
 void curses_reset_color_pairs() CURSES_LIB_NOEXCEPT;
 
 /* ============================================================================
- * C++ std::string overloads ==================================================
+ * C++ String overloads =======================================================
  * ==========================================================================*/
 
 #ifdef __cplusplus
-#include <string>
-static inline short curses_color_parse(const std::string& color)
-  CURSES_LIB_NOEXCEPT
+template<class String> inline short curses_color_parse(const String& color)
+	CURSES_LIB_NOEXCEPT
 { return curses_color_parse(color.c_str()); }
 
-static inline unsigned int curses_attr_parse(const std::string& attribute)
-  CURSES_LIB_NOEXCEPT
+template<class String> inline unsigned int curses_attr_parse(const String& attribute)
+	CURSES_LIB_NOEXCEPT
 { return curses_color_parse(attribute.c_str()); }
 
-static inline int curskey_parse(const std::string& keydef)
-  CURSES_LIB_NOEXCEPT
+template<class String> inline int curskey_parse(const String& keydef)
+	CURSES_LIB_NOEXCEPT
 { return curskey_parse(keydef.c_str()); }
 #endif
 

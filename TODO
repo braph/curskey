@@ -4,6 +4,8 @@ terminology: A-F1-F4
 setenv("ESCDELAY")
 curskey_get_keydef(): reoder SHIFT/ALT/CTRL
 
+- xterm: 8bit?
+
 Terminals:
 	- aterm
 	- xterm

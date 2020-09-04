@@ -10,8 +10,8 @@
 	"Usage: %s -o OUTFILE [-b BLACKLIST KEY]\n"
 #undef  CTRL  //usr/include/sys/ttydefaults.h defines this
 #define ALT   CURSKEY_MOD_META
-#define SHIFT CURSKEY_MOD_SHIFT
 #define CTRL  CURSKEY_MOD_CTRL
+#define SHIFT CURSKEY_MOD_SHIFT
 #define ARRAY_LEN(A) ((int) (sizeof(A)/sizeof(*A)))
 
 enum Status { E_OK, E_BLACKLISTED, E_XDOTOOL, E_INVALID_KEYSEQ, E_TRAILING_CHARS };
@@ -33,16 +33,15 @@ static void add_test(int key, int mod) {
 
 static void add_blacklist(int key_modded) {
 	for (int i = 0; i < RESULTS.count; ++i)
-		if (RESULTS.keycode[i] == key_modded) {
+		if (RESULTS.keycode[i] == key_modded)
 			RESULTS.status[i] = E_BLACKLISTED;
-			return;
-		}
 }
 
 static const char* curses_keysm_to_X11_keysym_str(int key) {
 	static char buf[8];
 	switch (key) {
 	case KEY_SPACE:     return "space";
+	case KEY_TAB:       return "Tab";
 	case KEY_ESCAPE:    return "Escape";
 	case KEY_BACKSPACE: return "BackSpace";
 	case KEY_ENTER:     return "KP_Enter";
@@ -69,9 +68,11 @@ static const char* curses_keysm_to_X11_keysym_str(int key) {
 static int X11_send_key(int key, int mod) {
 	char def[32] = "";
 	if (mod & ALT)   strcat(def, "alt+");
-	if (mod & SHIFT) strcat(def, "shift+");
 	if (mod & CTRL)  strcat(def, "ctrl+");
+	if (mod & SHIFT) strcat(def, "shift+");
 	strcat(def, curses_keysm_to_X11_keysym_str(key));
+
+	fprintf(stderr, "sending:%s\n", def);//TODO
 
 	int pid = fork();
 	switch (pid) {
@@ -173,6 +174,7 @@ static const char* keyseq_readable(const char* seq) {
 		strcat(readable, s);
 	}
 
+	readable[strlen(readable)] = '\0';
 	return readable;
 }
 
@@ -211,7 +213,17 @@ static void print_test_results(const char* file) {
 	fclose(fh);
 }
 
+void add_cntrl_to_blacklist(int key) {
+	add_blacklist(curskey_mod_key(key, CTRL));
+	add_blacklist(curskey_mod_key(key, ALT|CTRL));
+	add_blacklist(curskey_mod_key(key, SHIFT|CTRL));
+	add_blacklist(curskey_mod_key(key, ALT|SHIFT|CTRL));
+}
+
 int main(int argc, char**argv) {
+	system("xdotool search ''  mousemove --window %1 0 0");
+	freopen("/tmp/terminal_test.log", "w", stderr);
+
 	const char* OUTFILE = "result.json";
 
 	/* ==========================================================================
@@ -224,14 +236,29 @@ int main(int argc, char**argv) {
 	};
 
 	int c;
-	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], 0);
+	// a - z
 	for (c = 'a'; c <= 'z'; ++c)          add_test(c, 0);
 	for (c = 'a'; c <= 'z'; ++c)          add_test(c, ALT);
-	//for (c = 'a'; c <= 'z'; ++c)        add_test(c, CTRL);
-	//for (c = 'a'; c <= 'z'; ++c)        add_test(c, SHIFT);
-	//for (c = 'a'; c <= 'z'; ++c)        add_test(c, SHIFT | CTRL);
-	//for (c = 'a'; c <= 'z'; ++c)        add_test(c, SHIFT | ALT);
+	for (c = 'a'; c <= 'z'; ++c)          add_test(c, CTRL);
+	for (c = 'a'; c <= 'z'; ++c)          add_test(c, SHIFT);
+	for (c = 'a'; c <= 'z'; ++c)          add_test(c, ALT|CTRL);
+	for (c = 'a'; c <= 'z'; ++c)          add_test(c, ALT|SHIFT);
+	// F1 - F12
 	for (c = 1; c <= 12; ++c)             add_test(KEY_F(c), 0);
+	for (c = 1; c <= 12; ++c)             add_test(KEY_F(c), ALT);
+	for (c = 1; c <= 12; ++c)             add_test(KEY_F(c), CTRL);
+	for (c = 1; c <= 12; ++c)             add_test(KEY_F(c), SHIFT);
+	for (c = 1; c <= 12; ++c)             add_test(KEY_F(c), SHIFT|ALT);
+	for (c = 1; c <= 12; ++c)             add_test(KEY_F(c), SHIFT|CTRL);
+	// Special Keys
+	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], 0);
+	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], ALT);
+	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], CTRL);
+	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], SHIFT);
+	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], CTRL|SHIFT);
+	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], ALT|CTRL);
+	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], ALT|SHIFT);
+	for (c = 0; c < ARRAY_LEN(keys); ++c) add_test(keys[c], ALT|CTRL|SHIFT);
 
 	/* ==========================================================================
 	 * Commandline ==============================================================
@@ -244,10 +271,9 @@ int main(int argc, char**argv) {
 			default:  return printf(USAGE, argv[0]), 1;
 		}
 
-	add_blacklist(curskey_mod_key('s', ALT));
-	add_blacklist(curskey_mod_key('c', CTRL));
-	add_blacklist(curskey_mod_key('s', CTRL));
-	add_blacklist(curskey_mod_key('z', CTRL));
+	add_cntrl_to_blacklist('c');
+	add_cntrl_to_blacklist('s');
+	add_cntrl_to_blacklist('z');
 
 	initscr();
 	scrollok(stdscr, TRUE);
@@ -268,7 +294,6 @@ int main(int argc, char**argv) {
 	 * Output ===================================================================
 	 * ========================================================================*/
 
-	endwin();
 	print_test_results(OUTFILE);
 	return 0;
 }
