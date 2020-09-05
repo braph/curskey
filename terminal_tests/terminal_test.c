@@ -279,8 +279,8 @@ int main(int argc, char**argv) {
 	scrollok(stdscr, TRUE);
 	curskey_init();
 	noecho();
-	char trash;
 	wtimeout(stdscr, 1000); // Give the terminal 1 sec for initialization.
+  char trash;
 	eat_keys(&trash, 1);    // Some terminals send a KEY_RESIZE at the beginning.
 
 	/* ==========================================================================

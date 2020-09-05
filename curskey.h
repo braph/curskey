@@ -142,7 +142,7 @@ int curskey_init() CURSES_LIB_NOEXCEPT;
 			ERR /* Shift / Control not allowed here */                        \
 		)                                                                     \
 		: (KEY)                                                               \
-			+ (((MOD) & CURSKEY_MOD_META)  ? CURSKEY_META_START : 0)          \
+			+ (((MOD) & CURSKEY_MOD_META) ? CURSKEY_META_START : 0)           \
 	)                                                                         \
 	:((KEY) >= KEY_MIN && (KEY) <= KEY_MAX) ? (                               \
 		(KEY) | (signed) (MOD) /*TODO cast*/                                  \

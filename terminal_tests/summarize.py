@@ -25,10 +25,12 @@ def array_to_dictionary(array, key_position):
     return dictionary
 
 def all_keys(results):
-    keys = set()
+    keys = []
     for filename, json in results.items():
-        keys.update(json.keys())
-    return sorted(list(keys))
+        for key in json.keys():
+            if key not in keys:
+                keys.append(key)
+    return keys
 
 def print_row(tag, fields):
     print('<'+tag+'>')
@@ -60,15 +62,16 @@ for filename in glob.glob('*.json'):
     with open(filename, 'r') as fh:
         results[filename] = array_to_dictionary(json.load(fh), KEY)
 
-
-print('<html>')
-print('<head>')
-print('<title>')
-print('Test summary')
-print('</title>')
-print('</head>')
-print('<body>')
+print('''
+<html>
+    <head>
+        <title> Test summary </title>
+    </head>
+    <body>
+''')
 print_test_summary(results)
 print_keyseq_table(results)
-print('</body>')
-print('</html>')
+print('''
+    </body>
+</html>
+''')
