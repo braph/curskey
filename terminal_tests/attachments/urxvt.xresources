@@ -1,6 +1,7 @@
 ! Disable ISO14755 mode popup when pressing Shift+Ctrl
 URxvt.iso14755: false
-! Unbind all terminal defaults bindings
+URxvt.iso14755_52: false
+! Unbind all terminal default bindings
 URxvt.keysym.Up:	builtin-string:
 URxvt.keysym.Down:	builtin-string:
 URxvt.keysym.Left:	builtin-string:

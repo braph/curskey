@@ -6,7 +6,11 @@ import os, argparse
 TEST_BIN = './terminal_test'
 TESTS = {}
 BLACKLIST = [
-  'S-F10', # Opens context menu (X11 wide)
+  'S-F10',                            # Opens context menu (X11 wide)
+  'C-u', 'C-S-u', 'C-A-u', 'C-S-A-u', # Ctrl-U kills text to beginning of the line
+  'S-Insert', 'A-S-Insert',           # Shift-Insert pastes X11 clipboard
+  'C-h', 'C-M-h',                     # Ctrl-H = Backspace
+  'C-m', 'C-M-m'                      # Ctrl-M = Return
 ]
 
 class Test:
@@ -35,9 +39,9 @@ t('urxvt',
 t('eterm',        ['Eterm', '-e'])
 t('konsole',      ['konsole', '-e'])
 t('aterm',        ['aterm', '-e'])
-t('terminology',  ['terminology', '-e'])
 t('rxvt',         ['rxvt', '-e'])
 t('literm',       ['literm', '-e'])
+#t('terminology',  ['terminology', '-e'])
 #t('st',           ['st', '-e']) TODO?!
 #t('theterminal',  ['theterminal', '-e'])
 

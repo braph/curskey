@@ -311,7 +311,7 @@ int curskey_init()
 	CURSES_LIB_NOEXCEPT
 {
 	// It is important to call keypad(stdscr, TRUE) before we are defining
-	// our own keys, because keypad() does also defines keys and would
+	// our own keys, because keypad() does also define keys and would
 	// overwrite our Shift/Control-F{1..12} definitions.
 	keypad(stdscr, TRUE);
 #ifdef NCURSES_VERSION

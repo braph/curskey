@@ -23,7 +23,8 @@ def modifier_prefixes():
 
 print('! Disable ISO14755 mode popup when pressing Shift+Ctrl')
 print('URxvt.iso14755: false')
-print('! Unbind all terminal defaults bindings')
+print('URxvt.iso14755_52: false')
+print('! Unbind all terminal default bindings')
 for mod in modifier_prefixes():
     for key in keys():
         print('URxvt.keysym.%s%s:\tbuiltin-string:' % (mod, key))

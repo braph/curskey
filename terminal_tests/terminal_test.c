@@ -77,7 +77,7 @@ static int X11_send_key(int key, int mod) {
 	int pid = fork();
 	switch (pid) {
 	case -1: abort();
-	case 0:  execlp("xdotool", "xdotool", "key", def, NULL);
+	case 0:  execlp("xdotool", "xdotool", "key", "--clearmodifiers", def, NULL);
 					 exit(127);
 	default: waitpid(pid, &pid, 0);
 					 return pid;
@@ -221,7 +221,7 @@ void add_cntrl_to_blacklist(int key) {
 }
 
 int main(int argc, char**argv) {
-	system("xdotool search ''  mousemove --window %1 0 0");
+	system("xdotool search ''  mousemove --window %1 50 50 click 1");
 	freopen("/tmp/terminal_test.log", "w", stderr);
 
 	const char* OUTFILE = "result.json";
