@@ -1,9 +1,11 @@
 #!/usr/bin/python3
-import os, argparse
+import sys, os, argparse
 
 ''' Run the test binary in all terminals '''
 
-TEST_BIN = './terminal_test'
+os.chdir(os.path.dirname(sys.argv[0]))
+
+TEST_BIN = os.path.abspath('./terminal_test')
 TESTS = {}
 BLACKLIST = [
   'S-F10',                            # Opens context menu (X11 wide)
@@ -38,7 +40,7 @@ t('urxvt',
  ''' xrdb attachments/urxvt.xresources ''')
 
 t('konsole',
- ['./attachments/konsole', '-e'])
+ ['./attachments/konsole/konsole.py', '-e'])
 
 t('eterm',        ['Eterm', '-e'])
 t('aterm',        ['aterm', '-e'])
@@ -75,5 +77,5 @@ for name in selected_tests:
     print(name, argv)
     if test.init:
         os.system(test.init)
-    os.spawnvp(os.P_WAIT, name, argv)
+    os.spawnvp(os.P_WAIT, argv[0], argv)
 

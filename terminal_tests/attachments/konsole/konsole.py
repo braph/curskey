@@ -12,6 +12,8 @@ from lxml import etree
 #     -> More Actions
 #     -> Export Scheme
 
+os.chdir(os.path.dirname(sys.argv[0]))
+
 FILES = ['sessionui.rc', 'konsoleui.rc']
 SCHEME_FILE = 'exported_keymap'
 ACTION_NAMES = []
