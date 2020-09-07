@@ -7,10 +7,11 @@ TEST_BIN = './terminal_test'
 TESTS = {}
 BLACKLIST = [
   'S-F10',                            # Opens context menu (X11 wide)
-  'C-u', 'C-S-u', 'C-A-u', 'C-S-A-u', # Ctrl-U kills text to beginning of the line
   'S-Insert', 'A-S-Insert',           # Shift-Insert pastes X11 clipboard
+  'C-u', 'C-S-u', 'C-A-u', 'C-S-A-u', # Ctrl-U kills text to beginning of the line
   'C-h', 'C-M-h',                     # Ctrl-H = Backspace
-  'C-m', 'C-M-m'                      # Ctrl-M = Return
+  'C-m', 'C-M-m',                     # Ctrl-M = Return
+  'C-q', 'C-M-q'                      # Ctrl-Q = XON
 ]
 
 class Test:
@@ -36,8 +37,10 @@ t('urxvt',
  [],
  ''' xrdb attachments/urxvt.xresources ''')
 
+t('konsole',
+ ['./attachments/konsole', '-e'])
+
 t('eterm',        ['Eterm', '-e'])
-t('konsole',      ['konsole', '-e'])
 t('aterm',        ['aterm', '-e'])
 t('rxvt',         ['rxvt', '-e'])
 t('literm',       ['literm', '-e'])
@@ -72,5 +75,5 @@ for name in selected_tests:
     print(name, argv)
     if test.init:
         os.system(test.init)
-    os.spawnvp(os.P_WAIT, argv[0], argv)
+    os.spawnvp(os.P_WAIT, name, argv)
 

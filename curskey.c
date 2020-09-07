@@ -300,8 +300,11 @@ int curskey_wgetch(WINDOW* win)
 		//nodelay(win, FALSE);
 		if (ch2 == ERR)
 			return KEY_ESCAPE;
-		else
-			return curskey_mod_key(ch2, CURSKEY_MOD_META);
+		else {
+			unsigned int mod;
+			ch2 = curskey_unmod_key(ch2, &mod);
+			return curskey_mod_key(ch2, mod|CURSKEY_MOD_META);
+		}
 	}
 
 	return ch;
@@ -329,6 +332,10 @@ int curskey_init()
 	define_rxvt_key('8', KEY_END);
 	//define_key("\033[7~", KEY_HOME); // TODO!
 	//define_key("\033[8~", KEY_END);  // TODO!
+	define_key("\033OP", KEY_F(1)); // aterm // TODO?
+	define_key("\033OQ", KEY_F(2)); // aterm // TODO?
+	define_key("\033OR", KEY_F(3)); // aterm // TODO?
+	define_key("\033OS", KEY_F(4)); // aterm // TODO?
 	define_rxvt_func_keys();
 #endif
 	return OK;
@@ -573,6 +580,7 @@ void define_rxvt_func_keys()
 	CURSES_LIB_NOEXCEPT
 {
 	char seqs[4][12*3+1] = {
+		//  2  3  4  5  6  7  8  9  10 11 12
 		"11~12~13~14~15~17~18~19~20~21~23~24~", // [0] NONE
 		"23~24~25~26~28~29~31~32~33~34~23$24$", // [1] SHIFT
 		"11^12^13^14^15^17^18^19^20^21^23^24^", // [2] CTRL
