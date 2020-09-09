@@ -223,6 +223,7 @@ void add_cntrl_to_blacklist(int key) {
 int main(int argc, char**argv) {
 	system("xdotool search ''  mousemove --window %1 50 50 click 1");
 	freopen("/tmp/terminal_test.log", "w", stderr);
+	setvbuf(stderr, NULL, _IOLBF, 0);
 
 	const char* OUTFILE = "result.json";
 

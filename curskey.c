@@ -29,6 +29,7 @@
 #endif
 
 #define UPPER(CHAR) (CHAR & ~0x20)
+#define LOWER(CHAR) (CHAR |  0x20)
 #define ARRAY_LEN(A) STATIC_CAST(int, sizeof(A) / sizeof(*A))
 static void define_xterm_keys()          CURSES_LIB_NOEXCEPT;
 static void define_rxvt_key(char, int)   CURSES_LIB_NOEXCEPT;
@@ -223,6 +224,11 @@ int curskey_unmod_key(int key, unsigned int* modifiers)
 		else
 			key += 'A' - 1;
 		*modifiers |= CURSKEY_MOD_CTRL;
+	}
+
+	if (key >= 'A' && key <= 'Z') {
+		key = LOWER(key);
+		*modifiers |= CURSKEY_MOD_SHIFT;
 	}
 
 	return key;

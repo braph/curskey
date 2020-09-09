@@ -58,7 +58,7 @@ def print_keyseq_table(results):
         print_row('tr', row)
     print('</table>')
 
-for filename in glob.glob('*.json'):
+for filename in glob.glob('results/*.json'):
     with open(filename, 'r') as fh:
         results[filename] = array_to_dictionary(json.load(fh), KEY)
 

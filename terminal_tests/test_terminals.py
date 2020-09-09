@@ -42,12 +42,17 @@ t('urxvt',
 t('konsole',
  ['./attachments/konsole/konsole.py', '-e'])
 
+t('st',
+ ['./attachments/st/st/st', '-e'])
+
+t('kitty',
+ ['kitty', '-o', 'clear_all_shortcuts=yes', '-e'])
+
 t('eterm',        ['Eterm', '-e'])
 t('aterm',        ['aterm', '-e'])
 t('rxvt',         ['rxvt', '-e'])
 t('literm',       ['literm', '-e'])
 #t('terminology',  ['terminology', '-e'])
-#t('st',           ['st', '-e']) TODO?!
 #t('theterminal',  ['theterminal', '-e'])
 
 argp = argparse.ArgumentParser(description=__doc__)
@@ -71,6 +76,7 @@ selected_tests = args.tests if args.tests else TESTS.keys()
 for name in selected_tests:
     test = TESTS[name]
     outfile = os.path.join(args.outdir, "%s.json" % name)
+    outfile = os.path.abspath(outfile) # TODO?
     argv = test.argv + [TEST_BIN, '-o', outfile]
     for key in test.blacklist: argv.extend(['-b', key])
     for key in args.blacklist: argv.extend(['-b', key])

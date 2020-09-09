@@ -113,7 +113,7 @@ int curskey_init() CURSES_LIB_NOEXCEPT;
  * 	- **CURSKEY_MOD_CTRL**
  * 	- **CURSKEY_MOD_SHIFT**
  *
- * @note   This is implemented as a macro since since it shall be usable
+ * @note   This is implemented as a macro since it shall be usable
  *         as a constant expression (for example in switch-case).
  *
  * @return Keycode or **ERR** if the modifiers cannot be applied to this key.
