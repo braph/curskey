@@ -1,5 +1,5 @@
 #!/bin/sh
 
 #tinywm&
-./test_terminals.py "$@"
+./run_tests.py "$@"
 
