@@ -4,6 +4,9 @@ terminology: A-F1-F4
 setenv("ESCDELAY")
 curskey_get_keydef(): reoder SHIFT/ALT/CTRL
 
+http://www.calno.com/evilvte/
+https://en.wikipedia.org/wiki/List_of_terminal_emulators
+https://www.slant.co/topics/794/~best-linux-terminal-emulators
 - xterm: 8bit?
 - kitty: Ctrl+A (UPPERCASE!) does not send anything
 - ncurses: keypad() defines keys

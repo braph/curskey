@@ -1,7 +1,8 @@
 #!/usr/bin/python3
-import sys, os, argparse
+import sys, os, re, argparse
 from lib.xrdb import *
 from lib.which import *
+from lib.filebackup import *
 
 ''' Run the test binary in all terminals '''
 
@@ -52,6 +53,9 @@ TESTS = {}
 for f in os.listdir('./tests'):
     if f == '__pycache__':
         continue
+
+    elif f == 'README.md':
+        continue ## TODO
 
     directory = None
     if f.endswith('.py'):

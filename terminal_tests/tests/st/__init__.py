@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
 from __main__ import *
-import os, re
 
 class Test(ATest):
     def __init__(self):
         self._available = False
+        self._terminfo_backup = FileBackup('~/.terminfo', True)
 
         # Already compiled
         if os.path.exists('./st/st'):
@@ -35,11 +35,12 @@ class Test(ATest):
         return self._available
 
     def pre_run(self):
+        self._terminfo_backup.save()
         subprocess.check_call(['tic', '-sx', './st/st.info'])
 
     def run(self, args):
         subprocess.call(['./st/st', '-e'] + args)
 
     def cleanup(self):
-        pass # TODO: restore ~/.terminfo
+        self._terminfo_backup.restore()
 
